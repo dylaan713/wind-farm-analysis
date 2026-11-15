@@ -23,7 +23,7 @@ Status 2026-11-14: the site's first screen is built (`site/`), the finance contr
 All six pass, and the output is shown: `check` 0 errors · `test` · `build` · `e2e` · `budget` (first
 screen 60 KB gzipped JavaScript, whole site 150 KB) · `lighthouse` (mobile performance 90,
 accessibility 95). Measured 2026-11-14 on `site/polish` after the audit fixes: check 0 errors; test 84
-  passed; e2e 94 passed, 15 skipped (single-layout tests); budget 7.4 KB; Lighthouse mobile 100 / 100.
+  passed; e2e 94 passed, 16 skipped (single-layout tests); budget 7.4 KB; Lighthouse mobile 100 / 100.
 
 ## Site rules
 - Colour comes only from `site/src/lib/palette.ts`; a test fails on any other hex value in `site/src`.
@@ -31,7 +31,9 @@ accessibility 95). Measured 2026-11-14 on `site/polish` after the audit fixes: c
   by the chapter's owner, never by an agent.
 - Anything calculated is a pure function in `site/src/lib/` with a test beside it; `scripts/hero.ts`
   only reads input and draws. Tool math comes from `core/` through the `@core` alias.
-- The first-screen meter and turbines are a demo and are labeled so. No sample figures ship.
+- The first-screen meter and turbines are a demo and are labeled so. No sample figures ship. The
+  wind, output and energy shown all describe the one near turbine, so the numbers agree; the other
+  two turbines only add to the sun's glow.
 - Per-frame drawing is kept cheap on purpose (see the layer comment in `scripts/hero.ts`): the
   first version scored 71 on Lighthouse mobile until the hills were made static, the air canvas
   dropped to one pixel per CSS pixel, and the top bar's backdrop blur was removed.

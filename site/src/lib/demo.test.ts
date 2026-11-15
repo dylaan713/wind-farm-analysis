@@ -27,9 +27,10 @@ test('negative or NaN input adds nothing', () => {
 });
 
 test('chapter fill', () => {
+  // Thresholds are for ONE turbine's energy: 1, 3, 6 and 10 kWh.
   expect(chapterFill(0)).toEqual([0, 0, 0, 0]);
-  expect(chapterFill(3)).toEqual([1, 0, 0, 0]);
-  expect(chapterFill(6)).toEqual([1, 0.5, 0, 0]);
+  expect(chapterFill(1)).toEqual([1, 0, 0, 0]);
+  expect(chapterFill(2)).toEqual([1, 0.5, 0, 0]);
   expect(chapterFill(99)).toEqual([1, 1, 1, 1]);
 });
 

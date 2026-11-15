@@ -1,10 +1,12 @@
-// The first screen's readings. These describe a DEMO turbine driven by the visitor's wind,
+// The first screen's readings. Every number shown (wind, output, energy) describes the SAME ONE
+// turbine, the near one, so they always agree with each other. These describe a DEMO turbine driven by the visitor's wind,
 // never the real farm, and the page labels them that way. When core/src/energy exists,
 // demoPowerKw is replaced by the real turbine's power curve.
 
 const MS_PER_UNIT = 4.5, MAX_SHOWN_MS = 24;
 const RATED_KW = 3400, CUT_IN = 3, RATED_AT = 12, CUT_OUT = 25;
-const FILL_AT = [3, 9, 18, 30] as const;
+/** kWh from the one demo turbine at which each chapter link is full. */
+const FILL_AT = [1, 3, 6, 10] as const;
 
 /**
  * Wind speed shown to the visitor, in m/s, from the field's px-per-step wind. A fast sweep can

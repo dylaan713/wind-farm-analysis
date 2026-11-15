@@ -37,6 +37,29 @@ test('readouts are zero-padded with units', async ({ page }) => {
   await expect(page.locator('[data-read-output]')).toHaveText(/^[\d,]+ kW$/);
 });
 
+test('the two readings describe the same turbine and agree with each other', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'mouse sweep');
+  await open(page);
+  const hub = await nearHub(page);
+  const read = async () => {
+    const [w, o] = await Promise.all([page.locator('[data-read-wind]').innerText(), page.locator('[data-read-output]').innerText()]);
+    return { ms: parseFloat(w), kw: Number(o.replace(/[^\d]/g, '')) };
+  };
+  // One turbine can never show more than its rating, however hard the wind is pushed.
+  for (let i = 0; i < 4; i++) {
+    await page.mouse.move(hub.x - 420, hub.y);
+    await page.mouse.move(hub.x + 80, hub.y, { steps: 10 });
+    expect((await read()).kw).toBeLessThanOrEqual(3400);
+  }
+  // Left to settle, the output shown is what the demo power curve gives for the wind shown.
+  await page.mouse.move(5, 5);
+  await page.waitForTimeout(2500);
+  const { ms, kw } = await read();
+  const curve = (v: number) => (v <= 3 || v >= 25 ? 0 : 3400 * Math.min(1, ((v - 3) / 9) ** 3));
+  expect(kw).toBeGreaterThanOrEqual(curve(ms - 0.2) - 20);
+  expect(kw).toBeLessThanOrEqual(curve(ms + 0.2) + 20);
+});
+
 test('pushing the wind makes the meter climb faster', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop', 'mouse sweep');
   await open(page);
@@ -62,7 +85,7 @@ test('chapter chips fill in order', async ({ page }) => {
   expect(scales).toHaveLength(4);
   for (let i = 1; i < 4; i++) if (scales[i]! > 0) expect(scales[i - 1]).toBe(1);
   const total = await kwh(page);
-  expect(scales[0]!).toBeCloseTo(Math.min(1, total / 3), 1);
+  expect(scales[0]!).toBeCloseTo(Math.min(1, total / 1), 1);
 });
 
 test('chips are links that work without the animation', async ({ page }) => {

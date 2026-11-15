@@ -61,7 +61,7 @@ One table, used by Tasks 3 to 8. Lengths marked × s are multiplied by `s = min(
 | Back hill | `y = H·(0.71 + 0.05·sin(0.003·x + 2.2))` | |
 | Turbines | at 0.80, 0.57, 0.94 of width; scale 1, 0.58, 0.42; first on the front hill, others on the back; tower `0.36·H·scale`; rotor radius `min(0.21·H, 0.17·W)·scale` | |
 | Sun | centre (0.66·W, 0.69·H); radius `0.13·min(W, H)`; sky tint 13% air colour at the top fading to 0 at 0.72·H | |
-| Chapter fill | thresholds 3, 9, 18, 30 kWh | |
+| Chapter fill | thresholds 1, 3, 6, 10 kWh, counted from the near turbine alone (as built: wind, output and energy shown all describe that one turbine, so they agree) | |
 | Letter lean | target `clamp(2.4 × gust_u, −15, 15)` degrees; spring stiffness 0.16, damping 0.76, per 60 fps frame | only the visitor's wind, never the base wind |
 
 ## File map

@@ -76,7 +76,8 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
   let scene: Scene = layout(1, 1), W = 1, H = 1, dpr = 1, zones: Rect[] = [];
   let state: WindState = { t: 0, w: 1, s: 1, pointer: { x: 0, y: 0, vx: 0, vy: 0, active: false }, bursts: [] };
   let particles: Particle[] = [], rotors: Rotor[] = [];
-  let kwh = 0, totalKw = 0, pulse = 0, charge = 0;
+  // nearKw is the one turbine the readings describe; totalKw (all three) only drives the sun's glow.
+  let kwh = 0, nearKw = 0, totalKw = 0, pulse = 0, charge = 0;
   let downId: number | null = null, holding = false, downX = 0, downY = 0;
   let mouseIn = false, mouseX = 0, mouseY = 0, afterScroll = false;
   let inView = true, visible = document.visibilityState !== 'hidden', raf = 0, last = 0, painted = false, halved = false;
@@ -308,11 +309,12 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
     }
     xl.stroke();
 
-    total += turbine(near, palette.ink, k);
+    nearKw = turbine(near, palette.ink, k);
+    total += nearKw;
     totalKw = total;
 
     // Energy leaves the turbine along the ground, faster when there is more of it.
-    pulse += dt * (40 + total * 0.09); xl.fillStyle = palette.signal;
+    pulse += dt * (40 + nearKw * 0.27); xl.fillStyle = palette.signal;
     for (let i = 0; i < 9; i++) {
       const x = n.baseX - ((pulse + (i * n.baseX) / 9) % n.baseX);
       xl.beginPath(); xl.arc(x, frontHill(x, h), 3.6, 0, TAU); xl.fill();
@@ -342,7 +344,7 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
     };
     set(meterEl, 'meter', kwh.toFixed(2));
     set(windEl, 'wind', `${(rotors[0]?.ms ?? 0).toFixed(1).padStart(4, '0')} m/s`);
-    set(outEl, 'out', `${(Math.round(totalKw / 10) * 10).toLocaleString('en-US')} kW`);
+    set(outEl, 'out', `${(Math.round(nearKw / 10) * 10).toLocaleString('en-US')} kW`);
     chapterFill(kwh).forEach((f, i) => {
       const t = `scaleX(${f.toFixed(3)})`, el = fills[i];
       if (el && shown.fills[i] !== t) { shown.fills[i] = t; el.style.transform = t; }
@@ -382,7 +384,7 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
     if (!demoGustDone && !touched && state.t - arrivedAt >= DEMO_GUST_AFTER_S) demoGust();
     draw(dt);
     lean(dt);
-    kwh = addEnergy(kwh, totalKw, dt);
+    kwh = addEnergy(kwh, nearKw, dt);
     write();
     if (!painted) { painted = true; html.classList.add('live'); }
     raf = requestAnimationFrame(frame);
