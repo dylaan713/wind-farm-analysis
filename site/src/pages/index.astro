@@ -20,6 +20,8 @@ import { site } from '../content/site';
         try {
           var skip = sessionStorage.getItem('wf-arrived') || matchMedia('(prefers-reduced-motion: reduce)').matches;
           d.classList.add(skip ? 'arrived' : 'arriving');
+          // 'motion' means the live scene is expected, so the instruction line can show from the first paint.
+          if (!matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('motion');
         } catch (e) { d.classList.add('arrived'); }
       })();
     </script>

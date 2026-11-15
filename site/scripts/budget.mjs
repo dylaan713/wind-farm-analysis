@@ -4,7 +4,7 @@
 //   data:         any file under dist/data                                            <= 200 KB
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
-import { join, relative } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 
 const DIST = 'dist';
 const FIRST_SCREEN = 60 * 1024, WHOLE_SITE = 150 * 1024, DATA_FILE = 200 * 1024;
@@ -21,6 +21,19 @@ const gz = (file) => gzipSync(readFileSync(file)).length;
 const html = readFileSync(join(DIST, 'index.html'), 'utf8');
 const inline = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]).join('\n');
 const eager = new Set([...html.matchAll(/<(?:script|link)[^>]+(?:src|href)="([^"]+\.js)"/g)].map((m) => m[1].replace(/^\//, '').replace(/^.*?(_astro\/)/, '$1')));
+// A first-screen module loads everything it imports statically, so those files count too.
+const staticImports = (code) => [...code.matchAll(/(?:\bfrom|\bimport)\s*["'](\.{1,2}\/[^"']+\.js)["']/g)].map((m) => m[1]);
+const queue = [...eager].map((rel) => ({ rel, code: null }));
+if (inline) queue.push({ rel: '_astro/inline.js', code: inline });
+while (queue.length) {
+  const { rel, code } = queue.pop();
+  const file = join(DIST, rel);
+  if (code === null && !existsSync(file)) continue;
+  for (const spec of staticImports(code ?? readFileSync(file, 'utf8'))) {
+    const next = relative(DIST, resolve(dirname(file), spec));
+    if (!eager.has(next)) { eager.add(next); queue.push({ rel: next, code: null }); }
+  }
+}
 
 const js = walk(DIST).filter((f) => f.endsWith('.js'));
 let first = inline ? gzipSync(inline).length : 0, total = first, failed = false;

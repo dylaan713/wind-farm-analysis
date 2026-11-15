@@ -82,9 +82,13 @@ Contrast, computed by script on 2026-11-14 (WCAG ratio; 4.5 passes for text, 3 f
 
 One file is the source of truth (`site/src/lib/palette.ts`, mirrored in `tokens.css`). A unit test
 computes these pairs and fails if any used pair drops below its threshold or the two files drift.
-Text that sits over the moving air is tested against the flat ground token; the sky tint stays
-under 15% and the streaks stay pale enough that this holds, and any text block that proves hard to
-read gets a ground-coloured backing.
+
+**Corrected 2026-11-14 after the UI audit.** The first build tested text against the flat ground
+token, and that was wrong: a 13% sky tint behind the headline pulled the orange word from 3.11 to
+about 2.9, and moving streaks took the hint line under 4.5. Text over the scene now sits in a **calm
+zone**: no air is drawn behind it and the tint is erased there, with a soft edge. A browser test
+samples the canvas behind each piece of text, still and mid-sweep, and fails below 3.0 for the
+orange word or 4.5 for small text.
 
 ## 3. Type
 
@@ -117,6 +121,12 @@ follows the pointer.
 - Grass on the ridge bends with the air above it.
 - The sun glows brighter the more the farm is making.
 - Air turns from blue to orange through every rotor.
+- **Left alone for 2.5 seconds, the page sends one gust by itself** from under the hint line and
+  lights up the words "press and hold", so a first-time visitor sees what is possible. It never
+  happens once the visitor has touched anything. (Added after the audit: the air already moves on
+  its own, so nothing told a phone visitor they could push it.)
+- A gust needs a hold of about 0.3 seconds; an ordinary tap does nothing.
+- With reduced motion or JavaScript off, the hint line is replaced by one saying it is a still view.
 
 **Fine pointer:** pointer velocity pushes the wind; magnetic pull on the few plain buttons; hover
 states on everything clickable.
@@ -239,6 +249,10 @@ These need people, so they are not in the gate.
 
 - Final name and headline (placeholders are fine for now).
 - Whether the far turbines should match the real farm's turbine count or stay at three.
+- Not built yet, deferred to the chapter work: the sun climbing as the page scrolls (section 5),
+  and the six chapter stubs reworked into a compact index.
+- No keyboard way to send a gust. Keyboard scrolling does push the air. A visible "send a gust"
+  control is a candidate if this matters.
 - Found on the mockup at phone width and to fix in the build: the top bar wraps to three lines,
   and the chapter label overlaps the ground line.
 

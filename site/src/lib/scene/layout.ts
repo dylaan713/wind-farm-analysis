@@ -35,14 +35,32 @@ const TURBINES = [
   { at: 0.94, scale: 0.42, front: false },
 ] as const;
 
-export function layout(w: number, h: number): Scene {
+/**
+ * `clearBelow` is a y that text reaches down to. Turbines are shortened so their blade tips stay
+ * under it, as far as they can be while still standing clear of the ground.
+ */
+export function layout(w: number, h: number, opts: { clearBelow?: number } = {}): Scene {
   const turbines = TURBINES.map(({ at, scale, front }): TurbinePose => {
     const baseX = at * w;
     const baseY = (front ? frontHill : backHill)(baseX, h);
-    return { baseX, baseY, hubY: baseY - 0.36 * h * scale, radius: Math.min(0.21 * h, 0.17 * w) * scale, scale, front };
+    const radius = Math.min(0.21 * h, 0.17 * w) * scale;
+    let hubY = baseY - 0.36 * h * scale;
+    if (opts.clearBelow !== undefined) hubY = Math.min(baseY - radius * 1.15, Math.max(hubY, opts.clearBelow + radius));
+    return { baseX, baseY, hubY, radius, scale, front };
   });
   return { w, h, s: Math.min(w, h) / 800, sun: { x: 0.66 * w, y: 0.69 * h, r: 0.13 * Math.min(w, h) }, turbines };
 }
 
 /** How high the particles may fall before they are recycled: just above the far hill. */
 export const AIR_FLOOR = 0.86;
+
+/** The ridge never drops below this share of the scene's height (0.8 + 0.035 + 0.012). */
+const RIDGE_LOWEST = 0.847;
+
+/**
+ * The height to lay the scene out in, given the stage height and the y where something (the
+ * chapter links) starts at the bottom of the stage. The ridge is kept 12px above it.
+ */
+export function fitHeight(h: number, clearBelow: number): number {
+  return Math.max(Math.min(150, h), Math.min(h, (clearBelow - 12) / RIDGE_LOWEST));
+}

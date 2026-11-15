@@ -1,5 +1,9 @@
 # Handoff
 
+## State update (2026-11-14, audits and fixes)
+- **Done:** correctness and UI audits run on `site/polish`; every critical and important finding fixed with a test (`site/e2e/audit.spec.ts`): the orange headline word failing contrast, text contrast over moving air, the scroll-then-move phantom gust, short-landscape, zoom and 320px layouts, the screen-reader summary, a residue in the sky, readouts inside the blades, and weak or timing-fragile tests. Added a self-starting demo gust and a larger phone headline. Gate: check 0 errors, test 84 passed, e2e 94 passed and 15 skipped, budget 7.4 KB, Lighthouse mobile 100 / 100 / 96.
+- **Next:** Dylan tries it on a real phone, then merges pull request #7 (it contains #5 and #6) and #4. Deferred: the sun climbing with scroll, the chapter stubs as a compact index, a keyboard gust. Then his energy plan from Task 0. Still open: both display names in `site/src/content/site.ts`; a date it must be showable by.
+
 ## State update (2026-11-14, site wave 3)
 - **Done:** site plan tasks 7-9 on branch `site/polish`: meter tests and phone layout, leaning headline, press, magnetic and reveal behaviours, the once-per-visit arrival, the size and Lighthouse gate scripts, and CI. The first screen was restructured into cheaper layers after Lighthouse mobile scored 71; it now scores 100. Gate: check 0 errors, test 71 passed, e2e 73 passed and 9 skipped, budget 5.9 KB, Lighthouse mobile 100 / 100 / 96. The site plan (part 1) is complete.
 - **Next:** Dylan tries it on a laptop and a real phone, then merges the site pull request and #4. Then: his energy plan from Task 0 (the chapters need its results), both display names in `site/src/content/site.ts`, and a plan for the first chapter tool. Still open: a date it must be showable by.

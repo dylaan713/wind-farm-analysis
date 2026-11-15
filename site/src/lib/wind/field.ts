@@ -69,9 +69,14 @@ export function stepState(st: WindState, dt: number): WindState {
   };
 }
 
+/** Start a gust ring at a point. At most three rings are kept. */
+export function burstAt(st: WindState, x: number, y: number, strength: number): WindState {
+  const ring: Burst = { x, y, r: 0, strength: Math.min(1, strength) };
+  return { ...st, bursts: [...st.bursts, ring].slice(-MAX_RINGS) };
+}
+
 /** Release a held gust at the pointer. Too short a hold does nothing. */
 export function fireBurst(st: WindState, charge: number): WindState {
   if (charge <= MIN_CHARGE || !st.pointer.active) return st;
-  const ring: Burst = { x: st.pointer.x, y: st.pointer.y, r: 0, strength: Math.min(1, charge) };
-  return { ...st, bursts: [...st.bursts, ring].slice(-MAX_RINGS) };
+  return burstAt(st, st.pointer.x, st.pointer.y, charge);
 }

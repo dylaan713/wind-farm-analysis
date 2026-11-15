@@ -16,7 +16,7 @@ export function startReactive(html: HTMLElement): () => void {
     window.addEventListener(type, fn, opts);
     off.push(() => window.removeEventListener(type, fn, opts));
   };
-  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const calmQuery = window.matchMedia('(prefers-reduced-motion: reduce)'), calm = calmQuery.matches;
 
   // The arrival: the class was set before first paint; here it is only ended and remembered.
   if (html.classList.contains('arriving')) {
@@ -48,8 +48,13 @@ export function startReactive(html: HTMLElement): () => void {
   // data-magnetic
   if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
     const magnets = [...document.querySelectorAll<HTMLElement>('[data-magnetic]')].map((el) => ({ el, dx: 0, dy: 0 }));
+    const rest = () => magnets.forEach((m) => { m.dx = m.dy = 0; m.el.style.transform = ''; });
+    on('blur', rest);
+    document.documentElement.addEventListener('mouseleave', rest);
+    off.push(() => document.documentElement.removeEventListener('mouseleave', rest));
     on('pointermove', (e) => {
       if (e.pointerType !== 'mouse') return;
+      if (calmQuery.matches) { rest(); return; } // reduced motion can be switched on after the page loads
       for (const m of magnets) {
         const r = m.el.getBoundingClientRect();
         const x = e.clientX - (r.left - m.dx + r.width / 2), y = e.clientY - (r.top - m.dy + r.height / 2), d = Math.hypot(x, y);
@@ -59,7 +64,7 @@ export function startReactive(html: HTMLElement): () => void {
         m.el.style.transform = near ? `translate(${m.dx.toFixed(2)}px, ${m.dy.toFixed(2)}px)` : '';
       }
     }, { passive: true });
-    off.push(() => magnets.forEach((m) => (m.el.style.transform = '')));
+    off.push(rest);
   }
 
   return () => off.forEach((f) => f());

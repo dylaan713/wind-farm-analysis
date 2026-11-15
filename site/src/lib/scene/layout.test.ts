@@ -1,4 +1,4 @@
-import { backHill, frontHill, layout } from './layout';
+import { backHill, fitHeight, frontHill, layout } from './layout';
 
 test('scale factor', () => {
   expect(layout(1440, 820).s).toBeCloseTo(1.025, 3);
@@ -37,4 +37,34 @@ test('hills stay inside the stage and never cross', () => {
       expect(f).toBeLessThan(h);
     }
   }
+});
+
+test('the scene is shortened so the ridge clears whatever sits at the bottom of the stage', () => {
+  // Tall laptop stage, one row of chips starting at 746: nothing to do.
+  expect(fitHeight(820, 746)).toBe(820);
+  // Small phone, two rows of chips starting at 450: the ridge's lowest point must end 12px above them.
+  const h = fitHeight(568, 450);
+  expect(h).toBeLessThan(568);
+  for (let x = 0; x <= 320; x += 4) expect(frontHill(x, h)).toBeLessThanOrEqual(450 - 12 + 1e-6);
+  // Never collapses to nothing.
+  expect(fitHeight(300, 10)).toBeGreaterThanOrEqual(150);
+});
+
+test('turbines are shortened, when they can be, so their blades stay clear of text', () => {
+  const free = layout(320, 540), kept = layout(320, 540, { clearBelow: 250 });
+  kept.turbines.forEach((t, i) => {
+    // The blade tips never reach above the line...
+    expect(t.hubY - t.radius).toBeGreaterThanOrEqual(250 - 1e-6);
+    // ...the turbine still stands on its hill...
+    expect(t.baseY).toBeCloseTo(free.turbines[i]!.baseY, 6);
+    // ...and is never raised.
+    expect(t.hubY).toBeGreaterThanOrEqual(free.turbines[i]!.hubY - 1e-6);
+  });
+  // A turbine already clear of the line is left exactly as it was.
+  expect(layout(1440, 820, { clearBelow: 100 })).toEqual(layout(1440, 820));
+});
+
+test('a turbine is never shortened into the ground', () => {
+  const squeezed = layout(320, 540, { clearBelow: 520 });
+  for (const t of squeezed.turbines) expect(t.baseY - t.hubY).toBeGreaterThanOrEqual(t.radius * 1.15 - 1e-6);
 });

@@ -18,7 +18,8 @@ const L = site.creditLabels;
 </section>
 
 <style>
-  .chapter { padding-block: clamp(72px, 14svh, 160px); border-top: 1px solid var(--line); }
+  .chapter { padding-block: clamp(72px, 14svh, 160px); border-top: 1px solid var(--line); scroll-margin-top: var(--bar-h); }
+  .chapter > :global(*) { max-width: 1200px; }
   .number { font-weight: 700; font-size: 13px; color: var(--air-deep); margin-bottom: 14px; }
   .summary { margin-top: 18px; color: var(--third); font-size: clamp(17px, 1.6vw, 21px); }
   .credit { display: grid; gap: 14px; margin: 36px 0 0; grid-template-columns: 1fr; }

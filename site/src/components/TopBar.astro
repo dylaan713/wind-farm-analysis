@@ -3,7 +3,8 @@ import { site } from '../content/site';
 ---
 <header class="topbar wrap" data-topbar>
   <a class="name num" href="#top" data-magnetic>{site.name.toUpperCase()}</a>
-  <div class="meter" data-meter aria-live="off">
+  <!-- Visual only: the same figure is given to screen readers by the summary below, when it matters. -->
+  <div class="meter" data-meter aria-hidden="true">
     <span class="label">{site.meter.label}</span>
     <span class="value num"><b data-meter-value>0.00</b> {site.meter.unit}</span>
     <span class="label note">{site.meter.note}</span>
@@ -33,6 +34,7 @@ import { site } from '../content/site';
   .meter { display: none; text-align: right; line-height: 1.15; }
   :global(html.live) .meter { display: grid; justify-items: end; }
   .name { transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .name:hover { color: var(--air-deep); }
   .value { font-weight: 700; font-size: clamp(18px, 2.4vw, 30px); }
   .value b { color: var(--signal); font-weight: 700; }
   /* Small orange text fails contrast on white; below 24px the number uses the deep orange. */
@@ -42,5 +44,12 @@ import { site } from '../content/site';
     :global(html.live) .meter { grid-template-columns: auto auto; column-gap: 8px; align-items: baseline; }
     .note { grid-column: 1 / -1; }
     .value { font-size: 17px; }
+  }
+  /* The narrowest phones: one short column, nothing wraps. */
+  @media (max-width: 359px) {
+    :global(html.live) .meter { grid-template-columns: auto; }
+    .meter .label { font-size: 10.5px; white-space: nowrap; }
+    .note { grid-column: auto; }
+    .value { font-size: 15px; line-height: 1.05; }
   }
 </style>

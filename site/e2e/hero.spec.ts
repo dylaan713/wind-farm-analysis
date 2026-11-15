@@ -36,10 +36,11 @@ test('sweeping raises the wind speed', async ({ page }, info) => {
 test('hold and release sends one gust', async ({ page }) => {
   await open(page);
   await fire(page, 'pointerdown', 1, 200, 200);
-  await page.waitForTimeout(950);
-  expect((await state(page)).charge).toBeGreaterThan(0.9);
+  // Wait on the charge itself, not the clock: a slow runner charges more slowly.
+  await expect.poll(async () => (await state(page)).charge, { timeout: 6000 }).toBeGreaterThan(0.9);
+  const before = (await state(page)).bursts;
   await fire(page, 'pointerup', 1, 200, 200);
-  expect((await state(page)).bursts).toBe(1);
+  expect((await state(page)).bursts).toBe(before + 1);
   await expect.poll(async () => (await state(page)).bursts, { timeout: 5000 }).toBe(0);
 });
 
@@ -55,33 +56,42 @@ test('a short tap sends nothing', async ({ page }) => {
   expect((await state(page)).bursts).toBe(0);
 });
 
-test('moving during a hold cancels it', async ({ page }) => {
+test('a hold survives a small wobble but not a real move', async ({ page }) => {
   await open(page);
   await fire(page, 'pointerdown', 1, 200, 200);
-  await fire(page, 'pointermove', 1, 240, 200);
-  await page.waitForTimeout(950);
-  await fire(page, 'pointerup', 1, 240, 200);
-  expect((await state(page)).bursts).toBe(0);
+  await fire(page, 'pointermove', 1, 208, 200); // 8 px: still a hold
+  await expect.poll(async () => (await state(page)).charge, { timeout: 6000 }).toBeGreaterThan(0.2);
+  await fire(page, 'pointermove', 1, 212, 200); // 12 px from where it started: now it is a drag
+  expect((await state(page)).charge).toBe(0);
+  await page.waitForTimeout(400);
+  const before = (await state(page)).bursts;
+  await fire(page, 'pointerup', 1, 212, 200);
+  const after = await state(page);
+  expect(after.charge).toBe(0);
+  expect(after.bursts).toBe(before);
 });
 
 test('a scroll taking over the touch cancels a hold', async ({ page }) => {
   await open(page);
   await fire(page, 'pointerdown', 1, 200, 200);
-  await page.waitForTimeout(500);
+  await expect.poll(async () => (await state(page)).charge, { timeout: 6000 }).toBeGreaterThan(0.5);
+  const before = (await state(page)).bursts;
   await fire(page, 'pointercancel', 1, 200, 200);
-  await page.waitForTimeout(500);
   const s = await state(page);
-  expect(s.bursts).toBe(0);
+  expect(s.bursts).toBe(before);
   expect(s.charge).toBe(0);
 });
 
 test('leaving the window cancels a hold', async ({ page }) => {
   await open(page);
   await fire(page, 'pointerdown', 1, 200, 200);
-  await page.waitForTimeout(500);
+  await expect.poll(async () => (await state(page)).charge, { timeout: 6000 }).toBeGreaterThan(0.5);
+  const before = (await state(page)).bursts;
   await fire(page, 'pointerleave', 1, 200, 200);
-  await page.waitForTimeout(500);
-  expect((await state(page)).bursts).toBe(0);
+  expect((await state(page)).charge).toBe(0);
+  // A release that arrives afterwards must not fire the gust that was being charged.
+  await fire(page, 'pointerup', 1, 200, 200);
+  expect((await state(page)).bursts).toBe(before);
 });
 
 test('a second finger is ignored', async ({ page }) => {

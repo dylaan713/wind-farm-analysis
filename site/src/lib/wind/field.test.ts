@@ -1,4 +1,4 @@
-import { baseWind, fireBurst, gust, movePointer, stepState, wind, type Pointer, type WindState } from './field';
+import { baseWind, burstAt, fireBurst, gust, movePointer, stepState, wind, type Pointer, type WindState } from './field';
 
 const idle: Pointer = { x: 0, y: 0, vx: 0, vy: 0, active: false };
 const still: WindState = { t: 0, w: 1000, s: 1, pointer: idle, bursts: [] };
@@ -87,4 +87,11 @@ test('wind is the breeze plus the visitor', () => {
   const st = pushing();
   const [bu, bv] = baseWind(200, 200, 0), [gu, gv] = gust(200, 200, st);
   expect(wind(200, 200, st)).toEqual([bu + gu, bv + gv]);
+});
+
+test('a gust can be sent from a given point without a pointer', () => {
+  const st = burstAt(still, 300, 240, 0.85);
+  expect(st.bursts).toEqual([{ x: 300, y: 240, r: 0, strength: 0.85 }]);
+  expect(still.bursts).toHaveLength(0); // the original state is untouched
+  expect(burstAt(st, 1, 1, 5).bursts[1]!.strength).toBe(1); // strength is capped
 });

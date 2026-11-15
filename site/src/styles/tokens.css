@@ -14,9 +14,11 @@
   --font-num: 'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
 
   --gutter: 16px;
+  /* Height the fixed top bar covers, including its fade. Content that must clear it starts below this. */
+  --bar-h: 76px;
   --measure: 68ch;
   --line: color-mix(in srgb, var(--air) 18%, var(--ground));
 }
 @media (min-width: 640px) {
-  :root { --gutter: 48px; }
+  :root { --gutter: 48px; --bar-h: 108px; }
 }

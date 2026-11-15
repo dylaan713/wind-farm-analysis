@@ -22,8 +22,8 @@ Status 2026-11-14: the site's first screen is built (`site/`), the finance contr
 ## Definition of done for site changes
 All six pass, and the output is shown: `check` 0 errors · `test` · `build` · `e2e` · `budget` (first
 screen 60 KB gzipped JavaScript, whole site 150 KB) · `lighthouse` (mobile performance 90,
-accessibility 95). Measured 2026-11-14 on `site/polish`: check 0 errors; test 74 passed; e2e 73
-passed, 9 skipped (single-layout tests); budget 5.9 KB; Lighthouse mobile 100 / 100.
+accessibility 95). Measured 2026-11-14 on `site/polish` after the audit fixes: check 0 errors; test 84
+  passed; e2e 94 passed, 15 skipped (single-layout tests); budget 7.4 KB; Lighthouse mobile 100 / 100.
 
 ## Site rules
 - Colour comes only from `site/src/lib/palette.ts`; a test fails on any other hex value in `site/src`.
@@ -36,6 +36,12 @@ passed, 9 skipped (single-layout tests); budget 5.9 KB; Lighthouse mobile 100 / 
   first version scored 71 on Lighthouse mobile until the hills were made static, the air canvas
   dropped to one pixel per CSS pixel, and the top bar's backdrop blur was removed.
 - `index.astro` carries `noindex` while the repo is private. Remove it at launch.
+- **Text over the scene sits in a calm zone** (`data-calm`): no air is drawn behind it and the sky tint
+  is erased there. The orange headline word is only 3.11:1 on pure white, so anything behind it fails
+  it. `e2e/audit.spec.ts` samples the canvas behind each piece of text and fails if contrast drops.
+- The air fades by mixing toward white plus one whole level a frame (`lib/zones.ts`), so nothing is
+  left behind. A plain percentage fade leaves a visible residue.
+- `e2e/audit.spec.ts` holds one test per defect the 2026-11-14 audits found. Keep it passing.
 
 ## Hard rules
 - Free only. No paid tiers, trials needing a card, or metered API keys.

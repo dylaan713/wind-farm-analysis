@@ -30,7 +30,10 @@ const stub = (number: string, title: string, owner: Credit['owner']): Chapter =>
 export const site = {
   name: 'wind-farm',
   headline: ['Made of', 'moving', 'air.'] as [string, string, string],
-  sub: 'Sweep to push the wind. Press and hold, then let go, to send a gust.',
+  /** The first screen's instruction, in three parts so the gesture can be emphasised. */
+  hint: { lead: 'Sweep to push the wind.', emph: 'Press and hold, then let go,', tail: 'to send a gust.' },
+  /** Shown in its place when the scene cannot respond (JavaScript off, or reduced motion). */
+  still: 'A still view of the scene. With motion on, you can push the wind.',
   description: 'A wind farm, from the wind to the money: an energy model, a finance model, and the checks behind them.',
   people: {
     // Display names are entered by Dylan. An empty name shows the role alone.

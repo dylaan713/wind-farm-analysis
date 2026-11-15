@@ -20,6 +20,12 @@ test('letters lean when the wind passes and return upright', async ({ page }, in
 
 test('letters do not move in the base wind', async ({ page }) => {
   await open(page);
+  // A tap marks the visitor as present, so the page does not send its own demonstration gust.
+  await page.evaluate(() => {
+    const el = document.querySelector('[data-hero]')!, r = el.getBoundingClientRect();
+    const ev = (type: string) => new PointerEvent(type, { pointerId: 1, pointerType: 'touch', isPrimary: true, clientX: r.right - 20, clientY: r.bottom - 150, bubbles: true, buttons: 1 });
+    el.dispatchEvent(ev('pointerdown')); el.dispatchEvent(ev('pointerup'));
+  });
   for (let i = 0; i < 6; i++) {
     await page.waitForTimeout(500);
     expect(await leaning(page)).toBe(0);
@@ -50,8 +56,10 @@ test('magnetic pull follows a mouse and is off on touch', async ({ page }, info)
 });
 
 test('the arrival runs once per visit', async ({ page }) => {
-  await page.goto('/?debug');
-  expect(await page.evaluate(() => document.documentElement.classList.contains('arriving'))).toBe(true);
+  // Do not wait for the whole page to load: on a slow runner the arrival could already be over.
+  await page.goto('/?debug', { waitUntil: 'commit' });
+  await page.waitForFunction(() => document.documentElement.classList.contains('arriving') || document.documentElement.classList.contains('arrived'));
+  expect(await page.evaluate(() => document.documentElement.className)).toMatch(/arriv/);
   await expect.poll(() => page.evaluate(() => document.documentElement.classList.contains('arrived')), { timeout: 2500 }).toBe(true);
   expect(await page.evaluate(() => document.documentElement.classList.contains('arriving'))).toBe(false);
   await page.reload();

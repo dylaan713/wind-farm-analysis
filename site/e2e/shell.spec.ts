@@ -43,7 +43,9 @@ test.describe('with JavaScript off', () => {
   test('everything is readable', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('h1')).toBeVisible();
-    await expect(page.getByText('Sweep to push the wind.')).toBeVisible();
+    // Nothing here can respond, so the instruction is replaced by a line that says so.
+    await expect(page.getByText('A still view of the scene.')).toBeVisible();
+    await expect(page.getByText('Sweep to push the wind.')).toBeHidden();
     for (const title of CHAPTERS) await expect(page.getByRole('heading', { level: 2, name: title })).toBeVisible();
     await expect(page.getByText(DISCLAIMER)).toBeVisible();
     await expect(page.locator('[data-meter]')).toBeHidden();
@@ -72,6 +74,8 @@ test.describe('the still drawing', () => {
       await expect(page.locator('[data-hero] canvas:visible')).toHaveCount(0);
       await expect(page.locator('[data-still]:visible')).toHaveCount(1);
       await expect(page.locator('[data-meter]')).toBeHidden();
+      await expect(page.getByText('A still view of the scene.')).toBeVisible();
+      await expect(page.getByText('Sweep to push the wind.')).toBeHidden();
     });
   });
 });

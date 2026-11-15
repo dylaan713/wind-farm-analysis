@@ -31,8 +31,7 @@ test('the top bar still fits on a phone with the meter showing', async ({ page }
   expect(sw).toBeLessThanOrEqual(cw);
 });
 
-test('readouts are zero-padded with units', async ({ page }, info) => {
-  test.skip(info.project.name !== 'desktop', 'readouts are hidden on phones');
+test('readouts are zero-padded with units', async ({ page }) => {
   await open(page);
   await expect(page.locator('[data-read-wind]')).toHaveText(/^\d\d\.\d m\/s$/);
   await expect(page.locator('[data-read-output]')).toHaveText(/^[\d,]+ kW$/);
@@ -74,13 +73,24 @@ test('chips are links that work without the animation', async ({ page }) => {
   await expect(page.locator('#ch-05')).toBeInViewport();
 });
 
-test('screen readers are not flooded', async ({ page }) => {
+test('the spoken summary waits for the visitor and is never on a timer', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'mouse sweep');
   await open(page);
-  await expect(page.locator('[data-meter]')).toHaveAttribute('aria-live', 'off');
+  // The visual meter is hidden from screen readers; the summary carries the figure instead.
+  await expect(page.locator('[data-meter]')).toHaveAttribute('aria-hidden', 'true');
   const summary = page.locator('[data-meter-summary]');
   await expect(summary).toHaveAttribute('aria-live', 'polite');
-  const first = await summary.innerText();
-  expect(first).toMatch(/demo turbine/);
-  await page.waitForTimeout(3000);
-  expect(await summary.innerText()).toBe(first);
+  // Left alone, it says nothing, however long the page is open.
+  await page.waitForTimeout(6000);
+  const quiet = await summary.innerText();
+  expect(quiet).toBe('');
+  // After a sweep, and a pause, it speaks once.
+  const hub = await nearHub(page);
+  await page.mouse.move(hub.x - 420, hub.y);
+  await page.mouse.move(hub.x + 80, hub.y, { steps: 10 });
+  await expect.poll(() => summary.innerText(), { timeout: 6000 }).toMatch(/demo turbine, not the real farm/);
+  const spoken = await summary.innerText();
+  expect(spoken).not.toBe(quiet);
+  await page.waitForTimeout(4000);
+  expect(await summary.innerText()).toBe(spoken);
 });
