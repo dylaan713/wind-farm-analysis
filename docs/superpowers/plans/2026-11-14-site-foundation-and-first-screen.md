@@ -37,7 +37,7 @@ Conditions the design does not spell out but a real visit will hit. Each has a t
 2. **The window is resized or the phone is rotated mid-animation.** Canvases resize without blur, the scene re-lays out, letter positions are re-measured. (Task 6)
 3. **Press-and-hold meets scrolling on a phone.** If the finger moves more than 10 px before release, the hold is cancelled and the page scrolls; no text selection or callout menu appears. (Task 6)
 4. **Reduced motion, or JavaScript off.** The static drawing shows, nothing animates, the meter is hidden rather than stuck at zero, and every word is still on the page. (Tasks 3, 6)
-5. **A slow device.** If the average frame takes over 24 ms across 90 frames, the particle count halves, once. Device pixel ratio is capped at 2. (Task 6)
+5. **A slow device.** If more than half the frames in the last two seconds (at least 20 frames) took over 24 ms, the particle count halves, once. (As built; the first rule, an average over 90 frames, kept very slow devices waiting too long.) Device pixel ratio is capped at 2. (Task 6)
 6. **A second finger, or the pointer leaving the window.** Only the first pointer is tracked; leaving ends any hold without firing a gust. (Task 6)
 
 ## Constants
@@ -50,18 +50,18 @@ One table, used by Tasks 3 to 8. Lengths marked × s are multiplied by `s = min(
 | Step length | 1.7 px per frame at 60 fps | particle travel = wind × 1.7 × (dt × 60) |
 | Pointer push | radius 190 × s; gain 0.3; pointer velocity smoothed 0.6 old / 0.4 new, decays × 0.95 per frame | |
 | Gust ring | speed 820 px/s × s; band half-width 70 × s; gain 7; fades to 0 at radius 1.1 × width | |
-| Hold to charge | 0.9 s to full; fires on release if charge > 0.12; cancelled by > 10 px of movement | |
+| Hold to charge | 0.9 s to full; fires on release if charge > 0.33 (about 0.3 s; was 0.12, which an ordinary tap exceeded); cancelled by > 10 px of movement | |
 | Wind speed shown | `m/s = hypot(u, v) × 4.5` | |
 | Demo power | 0 below 3 m/s and at or above 25; else `3400 × min(1, ((m/s − 3) / 9)³)` kW | replaced by `powerKw` from `core/src/energy` when that exists |
 | Wake colour | energised `e` set to 1 on crossing a rotor; decays with time constant 1.18 s; particle slowed by `1 − 0.38·e` | |
 | Streak | colour is a straight mix from air to signal by `e`, each channel rounded; opacity `0.3 + 0.35·min(1, speed/5) + 0.35·e`; width `1 + 0.9·e + 0.5·min(1, speed/5)` px, where speed is `hypot(u, v)` | |
 | Particles | 680 on desktop, 340 under 640 px wide | |
-| Trails | each frame, paint the background over the air canvas at 8% opacity | |
-| Front hill | `y = H·(0.80 + 0.035·sin(0.004·x + 1) + 0.012·sin(0.011·x))` | |
+| Trails | each frame, mix the air canvas 8% toward white, then lighten it by one whole level (as built: a percentage alone leaves a residue; the sky tint and sun are separate layers above) | |
+| Front hill | `y = H·(0.80 + 0.035·sin(0.004·x + 1) + 0.012·sin(0.011·x))`, and never less than 2% of the height below the back hill | |
 | Back hill | `y = H·(0.71 + 0.05·sin(0.003·x + 2.2))` | |
 | Turbines | at 0.80, 0.57, 0.94 of width; scale 1, 0.58, 0.42; first on the front hill, others on the back; tower `0.36·H·scale`; rotor radius `min(0.21·H, 0.17·W)·scale` | |
 | Sun | centre (0.66·W, 0.69·H); radius `0.13·min(W, H)`; sky tint 13% air colour at the top fading to 0 at 0.72·H | |
-| Chapter fill | thresholds 3, 9, 18, 30 kWh | |
+| Chapter fill | thresholds 1, 3, 6, 10 kWh, counted from the near turbine alone (as built: wind, output and energy shown all describe that one turbine, so they agree) | |
 | Letter lean | target `clamp(2.4 × gust_u, −15, 15)` degrees; spring stiffness 0.16, damping 0.76, per 60 fps frame | only the visitor's wind, never the base wind |
 
 ## File map

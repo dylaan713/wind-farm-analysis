@@ -10,8 +10,40 @@ tested code, and an interactive site. **Read `HANDOFF.md` first.**
 - Site design: `docs/superpowers/specs/2026-11-14-site-design.md` (mockup: `docs/design/first-screen-mockup-colour.html`)
 - Site plan, part 1: `docs/superpowers/plans/2026-11-14-site-foundation-and-first-screen.md`
 
-Status 2026-11-14: planning. No code, no test gate and no build exist yet. Add the commands here
-when they do.
+Status 2026-11-14: the site's first screen is built (`site/`), the finance contract exists
+(`core/`), and the energy and finance models are not started.
+
+## Commands
+- **Site** (`cd site`): `npm run dev` · `npm run check` · `npm test` · `npm run build` · `npm run e2e`
+  (Playwright, laptop and phone) · `npm run budget` · `npm run lighthouse`
+- **Core** (`cd core`): `npm test` · `npm run check`
+- e2e needs Playwright's Chromium (`npx playwright install chromium`, free). Lighthouse needs Chrome installed.
+
+## Definition of done for site changes
+All six pass, and the output is shown: `check` 0 errors · `test` · `build` · `e2e` · `budget` (first
+screen 60 KB gzipped JavaScript, whole site 150 KB) · `lighthouse` (mobile performance 90,
+accessibility 95). Measured 2026-11-14 on `site/polish` after the audit fixes: check 0 errors; test 84
+  passed; e2e 94 passed, 16 skipped (single-layout tests); budget 7.4 KB; Lighthouse mobile 100 / 100.
+
+## Site rules
+- Colour comes only from `site/src/lib/palette.ts`; a test fails on any other hex value in `site/src`.
+- All copy and facts live in `site/src/content/site.ts`. The `ai` and `checked` labels are written
+  by the chapter's owner, never by an agent.
+- Anything calculated is a pure function in `site/src/lib/` with a test beside it; `scripts/hero.ts`
+  only reads input and draws. Tool math comes from `core/` through the `@core` alias.
+- The first-screen meter and turbines are a demo and are labeled so. No sample figures ship. The
+  wind, output and energy shown all describe the one near turbine, so the numbers agree; the other
+  two turbines only add to the sun's glow.
+- Per-frame drawing is kept cheap on purpose (see the layer comment in `scripts/hero.ts`): the
+  first version scored 71 on Lighthouse mobile until the hills were made static, the air canvas
+  dropped to one pixel per CSS pixel, and the top bar's backdrop blur was removed.
+- `index.astro` carries `noindex` while the repo is private. Remove it at launch.
+- **Text over the scene sits in a calm zone** (`data-calm`): no air is drawn behind it and the sky tint
+  is erased there. The orange headline word is only 3.11:1 on pure white, so anything behind it fails
+  it. `e2e/audit.spec.ts` samples the canvas behind each piece of text and fails if contrast drops.
+- The air fades by mixing toward white plus one whole level a frame (`lib/zones.ts`), so nothing is
+  left behind. A plain percentage fade leaves a visible residue.
+- `e2e/audit.spec.ts` holds one test per defect the 2026-11-14 audits found. Keep it passing.
 
 ## Hard rules
 - Free only. No paid tiers, trials needing a card, or metered API keys.

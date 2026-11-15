@@ -1,0 +1,11 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "paths": { "@core/*": ["../core/src/*"] },
+    "noUncheckedIndexedAccess": true,
+    "resolveJsonModule": true,
+    "types": ["vitest/globals"]
+  },
+  "include": [".astro/types.d.ts", "src", "e2e", "*.ts", "*.mjs"],
+  "exclude": ["dist"]
+}

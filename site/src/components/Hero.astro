@@ -1,0 +1,123 @@
+---
+import { site } from '../content/site';
+import { sceneSvg } from '../lib/scene/svg';
+const [l1, l2, l3] = site.headline;
+const full = site.headline.join(' ');
+const chips = site.heroChips.map((id) => site.chapters.find((c) => c.id === id)!);
+// Drawn at build time: this is the whole first screen when JavaScript is off or motion is reduced.
+const stillWide = sceneSvg(1440, 820);
+const stillNarrow = sceneSvg(390, 780);
+const letters = (s: string) => [...s].map((ch) => (ch === ' ' ? ' ' : ch));
+---
+<section class="hero" id="top" data-hero>
+  <div class="scene" data-scene>
+    <div class="still wide" data-still set:html={stillWide} />
+    <div class="still narrow" data-still set:html={stillNarrow} />
+  </div>
+
+  <div class="copy wrap">
+    <h1 class="display" aria-label={full}>
+      <span class="line" aria-hidden="true">{letters(l1).map((ch) => <span data-lean>{ch}</span>)}</span>
+      <span class="line" aria-hidden="true">
+        {letters(l2 + ' ').map((ch) => <span data-lean>{ch}</span>)}<span class="energy" data-calm>{letters(l3).map((ch) => <span data-lean>{ch}</span>)}</span>
+      </span>
+    </h1>
+    <!-- Shown when the scene is live: it tells the visitor what they can do. -->
+    <p class="sub sub-live" data-calm data-arrive>{site.hint.lead} <b>{site.hint.emph}</b> {site.hint.tail}</p>
+    <!-- Shown when it is not (JavaScript off, or reduced motion): nothing here would respond. -->
+    <p class="sub sub-still">{site.still}</p>
+
+    <dl class="readouts" data-readouts data-calm>
+      <div><dt class="label">{site.readouts.wind}</dt><dd class="num" data-read-wind>00.0 m/s</dd></div>
+      <div><dt class="label">{site.readouts.output}</dt><dd class="num" data-read-output>0 kW</dd></div>
+    </dl>
+  </div>
+
+  <nav class="chips wrap" aria-label="Chapters" data-arrive data-chips>
+    {chips.map((c) => (
+      <a class="chip num" href={`#${c.id}`} data-press data-chip>
+        <i data-chip-fill></i>
+        <span>{c.number} {c.title}</span>
+      </a>
+    ))}
+  </nav>
+</section>
+
+<script>
+  import { startHero } from '../scripts/hero';
+  const hero = document.querySelector<HTMLElement>('[data-hero]');
+  if (hero) startHero(hero);
+</script>
+
+<style>
+  .hero { position: relative; height: 100svh; min-height: min(540px, 100svh); overflow: hidden; background: var(--ground); }
+  /* Sweeping sideways pushes the wind; vertical drags still scroll the page. A long press
+     charges a gust, so it must not select text or open the callout menu. */
+  .hero { touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+
+  .scene { position: absolute; inset: 0; }
+  .still { position: absolute; inset: 0; }
+  .still.narrow { display: none; }
+  @media (max-width: 639px) { .still.wide { display: none; } .still.narrow { display: block; } }
+  /* Once the first live frame is painted the still drawing steps aside. */
+  :global(html.live) .still { visibility: hidden; }
+  .scene :global(canvas) { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .scene :global([data-layer='sun']) { position: absolute; border-radius: 50%; background: var(--signal); will-change: transform; }
+  .scene :global([data-layer='glow']) {
+    position: absolute; border-radius: 50%; opacity: 0; pointer-events: none; will-change: transform, opacity;
+    background: radial-gradient(circle, var(--signal) 27%, color-mix(in srgb, var(--signal) 0%, transparent) 70%);
+  }
+
+  .copy { position: absolute; inset: clamp(84px, 16svh, 160px) 0 auto 0; pointer-events: none; }
+  h1 { white-space: nowrap; }
+  .line { display: block; }
+  .line span[data-lean] { display: inline-block; transform-origin: 50% 100%; will-change: transform; }
+  /* The orange word sits on clear white (no tint, no air behind it) and carries a ground-coloured
+     halo. Orange on white is 3.11:1, only just enough for large text, so nothing may dim what is behind it. */
+  .energy { color: var(--signal); text-shadow: 0 0 2px var(--ground), 0 0 12px var(--ground); }
+
+  .sub { margin-top: clamp(14px, 2vw, 26px); max-width: 34ch; width: fit-content; color: var(--third); font-size: clamp(15px, 1.5vw, 19px); }
+  .sub b { color: var(--ink); font-weight: 600; transition: color 0.3s ease; }
+  /* While the page demonstrates a gust by itself, the words that explain it light up. */
+  :global(html.hinting) .sub b { color: var(--signal-deep); }
+  /* Which of the two lines shows depends on whether the scene can be live at all. */
+  .sub-live { display: none; }
+  :global(html.motion) .sub-live { display: block; }
+  :global(html.motion) .sub-still { display: none; }
+
+  .readouts { display: none; margin: clamp(14px, 2vw, 24px) 0 0; gap: 22px; width: max-content; }
+  :global(html.live) .readouts { display: flex; }
+  .readouts dd { margin: 2px 0 0; font-weight: 700; font-size: clamp(15px, 1.5vw, 20px); }
+
+  .chips {
+    position: absolute; inset: auto 0 clamp(14px, 3svh, 30px) 0;
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+  }
+  @media (min-width: 640px) { .chips { grid-template-columns: repeat(4, minmax(0, 260px)); } }
+  .chip {
+    position: relative; overflow: hidden; display: block; min-height: 44px;
+    padding: 13px 14px; border: 1.5px solid var(--ink); border-radius: 999px;
+    background: var(--ground); color: var(--ink); text-decoration: none;
+    font-weight: 700; font-size: 12px; line-height: 1.2; white-space: nowrap; text-overflow: ellipsis;
+  }
+  .chip:hover { border-color: var(--air-deep); box-shadow: 0 0 0 3px color-mix(in srgb, var(--air) 22%, transparent); }
+  .chip i { position: absolute; inset: 0; background: var(--signal); transform-origin: left; transform: scaleX(0); }
+  .chip span { position: relative; }
+
+  /* Phones: the headline is the picture, so it takes most of the width. */
+  @media (max-width: 639px) {
+    .copy { inset-block-start: clamp(78px, 13svh, 120px); }
+    h1.display { font-size: clamp(44px, 18.5vw, 118px); letter-spacing: -0.045em; }
+    .sub { max-width: 27ch; }
+  }
+  /* Small phones: the two live readings give way to the scene. */
+  @media (max-width: 639px) and (max-height: 640px) { :global(html.live) .readouts { display: none; } .sub { max-width: 22ch; } }
+  /* Short screens (a phone on its side, or a zoomed-in laptop): everything has to fit one screen. */
+  @media (max-height: 500px) {
+    .copy { inset-block-start: calc(var(--bar-h) + 6px); }
+    h1.display { font-size: min(9.4vw, 17svh); }
+    .sub { margin-top: 8px; font-size: 14px; max-width: 46vw; }
+    :global(html.live) .readouts { display: none; }
+    .chips { inset-block-end: 10px; }
+  }
+</style>

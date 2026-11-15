@@ -1,0 +1,55 @@
+---
+import { site } from '../content/site';
+---
+<header class="topbar wrap" data-topbar>
+  <a class="name num" href="#top" data-magnetic>{site.name.toUpperCase()}</a>
+  <!-- Visual only: the same figure is given to screen readers by the summary below, when it matters. -->
+  <div class="meter" data-meter aria-hidden="true">
+    <span class="label">{site.meter.label}</span>
+    <span class="value num"><b data-meter-value>0.00</b> {site.meter.unit}</span>
+    <span class="label note">{site.meter.note}</span>
+  </div>
+  <p class="sr-only" data-meter-summary aria-live="polite"></p>
+</header>
+
+<style>
+  .topbar {
+    position: fixed; inset: 0 0 auto 0; z-index: 10;
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+    padding-block: clamp(12px, 2.2vw, 24px);
+    pointer-events: none;
+  }
+  /* A light backing so the bar stays readable over the chapters. It fades out at its
+     lower edge, so it never draws a hard line across the sky. */
+  .topbar::before {
+    content: ''; position: absolute; inset: 0 0 -18px 0; z-index: -1;
+    /* No backdrop blur: blurring a canvas that changes every frame is costly on phones. */
+    background: color-mix(in srgb, var(--ground) 88%, transparent);
+    -webkit-mask-image: linear-gradient(#000 45%, transparent); mask-image: linear-gradient(#000 45%, transparent);
+  }
+  .name {
+    pointer-events: auto; font-weight: 700; font-size: 12px; letter-spacing: 0.04em;
+    color: var(--ink); text-decoration: none; white-space: nowrap; padding-block: 4px;
+  }
+  .meter { display: none; text-align: right; line-height: 1.15; }
+  :global(html.live) .meter { display: grid; justify-items: end; }
+  .name { transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .name:hover { color: var(--air-deep); }
+  .value { font-weight: 700; font-size: clamp(18px, 2.4vw, 30px); }
+  .value b { color: var(--signal); font-weight: 700; }
+  /* Small orange text fails contrast on white; below 24px the number uses the deep orange. */
+  @media (max-width: 899px) { .value b { color: var(--signal-deep); } }
+  /* On a phone the label and the number share a line, so the demo note still fits under them. */
+  @media (max-width: 639px) {
+    :global(html.live) .meter { grid-template-columns: auto auto; column-gap: 8px; align-items: baseline; }
+    .note { grid-column: 1 / -1; }
+    .value { font-size: 17px; }
+  }
+  /* The narrowest phones: one short column, nothing wraps. */
+  @media (max-width: 359px) {
+    :global(html.live) .meter { grid-template-columns: auto; }
+    .meter .label { font-size: 10.5px; white-space: nowrap; }
+    .note { grid-column: auto; }
+    .value { font-size: 15px; line-height: 1.05; }
+  }
+</style>

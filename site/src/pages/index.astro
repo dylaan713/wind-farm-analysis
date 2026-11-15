@@ -1,0 +1,41 @@
+---
+import '../styles/global.css';
+import Chapter from '../components/Chapter.astro';
+import Footer from '../components/Footer.astro';
+import Hero from '../components/Hero.astro';
+import TopBar from '../components/TopBar.astro';
+import { site } from '../content/site';
+---
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{site.name}</title>
+    <meta name="description" content={site.description} />
+    <meta name="robots" content="noindex" />
+    <script is:inline>
+      // Decide before first paint whether this visit gets the arrival. One per session, never under reduced motion.
+      (function () {
+        var d = document.documentElement;
+        try {
+          var skip = sessionStorage.getItem('wf-arrived') || matchMedia('(prefers-reduced-motion: reduce)').matches;
+          d.classList.add(skip ? 'arrived' : 'arriving');
+          // 'motion' means the live scene is expected, so the instruction line can show from the first paint.
+          if (!matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('motion');
+        } catch (e) { d.classList.add('arrived'); }
+      })();
+    </script>
+  </head>
+  <body>
+    <TopBar />
+    <main>
+      <Hero />
+      {site.chapters.map((chapter) => <Chapter chapter={chapter} />)}
+    </main>
+    <Footer />
+    <script>
+      import { startReactive } from '../scripts/reactive';
+      startReactive(document.documentElement);
+    </script>
+  </body>
+</html>

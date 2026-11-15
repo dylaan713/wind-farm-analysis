@@ -1,0 +1,29 @@
+---
+import { site, type Chapter } from '../content/site';
+interface Props { chapter: Chapter }
+const { chapter: c } = Astro.props;
+const L = site.creditLabels;
+---
+<section class="chapter wrap" id={c.id} aria-labelledby={`${c.id}-title`} data-chapter data-status={c.status}>
+  <p class="number num" aria-hidden="true" data-reveal>{c.number}</p>
+  <h2 class="title" id={`${c.id}-title`} data-reveal>{c.title}</h2>
+  <div class="body" data-chapter-body>
+    <p class="summary measure" data-reveal>{c.summary}</p>
+    <dl class="credit" data-reveal>
+      <div><dt class="label">{L.owner}</dt><dd>{site.ownerLabel[c.credit.owner]}</dd></div>
+      <div><dt class="label">{L.ai}</dt><dd>{c.credit.ai}</dd></div>
+      <div><dt class="label">{L.checked}</dt><dd>{c.credit.checked}</dd></div>
+    </dl>
+  </div>
+</section>
+
+<style>
+  .chapter { padding-block: clamp(72px, 14svh, 160px); border-top: 1px solid var(--line); scroll-margin-top: var(--bar-h); }
+  .chapter > :global(*) { max-width: 1200px; }
+  .number { font-weight: 700; font-size: 13px; color: var(--air-deep); margin-bottom: 14px; }
+  .summary { margin-top: 18px; color: var(--third); font-size: clamp(17px, 1.6vw, 21px); }
+  .credit { display: grid; gap: 14px; margin: 36px 0 0; grid-template-columns: 1fr; }
+  @media (min-width: 640px) { .credit { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; } }
+  .credit div { padding: 16px 18px; border-radius: 14px; background: var(--surface); }
+  .credit dd { margin: 6px 0 0; font-size: 15px; line-height: 1.4; }
+</style>
