@@ -42,6 +42,10 @@ MONTHS = ["January", "February", "March", "April", "May", "June", "July", "Augus
 # --- 3. ERA5 through Open-Meteo's historical archive --------------------------------------------
 WIND_URL = "https://archive-api.open-meteo.com/v1/archive"
 WIND_VARS = {"wind_speed_100m": "m/s", "wind_direction_100m": "°", "temperature_2m": "°C", "surface_pressure": "hPa"}
+# Always named. Left to choose, the service answers with ERA5 before 2017 and ECMWF IFS (a finer,
+# different model) from 2017 on; checked 2026-11-14. One model for every year, or the long record has a seam.
+WIND_MODEL = "era5"
+ERA5_GRID_DEG = 0.25
 
 
 def fetch(url: str, dest: Path, *, params: dict | None = None, force: bool = False) -> Path:
@@ -167,6 +171,10 @@ def parse_wind(payload: dict) -> pd.DataFrame:
     for name, unit in WIND_VARS.items():
         if units.get(name) != unit:
             raise ValueError(f"{name} came back in {units.get(name)!r}, expected {unit!r}")
+    for axis in ("latitude", "longitude"):
+        v = payload.get(axis)
+        if v is not None and abs(v / ERA5_GRID_DEG - round(v / ERA5_GRID_DEG)) > 1e-6:
+            raise ValueError(f"{axis} {v} is not on the ERA5 quarter-degree grid: this is not ERA5 data")
     h = payload["hourly"]
     num = lambda name: pd.to_numeric(pd.Series(h[name], dtype="object"), errors="coerce").to_numpy(dtype="float64")
     return pd.DataFrame(
@@ -184,10 +192,10 @@ def wind(lat: float, lon: float, start_year: int, end_year: int) -> pd.DataFrame
     """Hourly wind at 100 m and the air's state at a point, one request per year."""
     frames = []
     for year in range(start_year, end_year + 1):
-        dest = RAW / "wind" / f"{lat:.4f}_{lon:.4f}_{year}.json"
+        dest = RAW / "wind" / f"{WIND_MODEL}_{lat:.4f}_{lon:.4f}_{year}.json"
         fetch(WIND_URL, dest, params={
             "latitude": lat, "longitude": lon, "start_date": f"{year}-01-01", "end_date": f"{year}-12-31",
-            "hourly": ",".join(WIND_VARS), "wind_speed_unit": "ms", "timezone": "GMT",
+            "hourly": ",".join(WIND_VARS), "wind_speed_unit": "ms", "timezone": "GMT", "models": WIND_MODEL,
         })
         frames.append(parse_wind(json.loads(dest.read_text())))
     return pd.concat(frames)

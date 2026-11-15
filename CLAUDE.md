@@ -11,12 +11,14 @@ tested code, and an interactive site. **Read `HANDOFF.md` first.**
 - Site plan, part 1: `docs/superpowers/plans/2026-11-14-site-foundation-and-first-screen.md`
 
 Status 2026-11-14: the site's first screen is built (`site/`), the finance contract exists
-(`core/`), and the energy and finance models are not started.
+(`core/`), the energy side has its data access and a farm shortlist (`energy/`,
+`docs/farm-selection.md`), and the finance model is not started.
 
 ## Commands
 - **Site** (`cd site`): `npm run dev` · `npm run check` · `npm test` · `npm run build` · `npm run e2e`
   (Playwright, laptop and phone) · `npm run budget` · `npm run lighthouse`
 - **Core** (`cd core`): `npm test` · `npm run check`
+- **Energy** (repo root): `uv sync` once, then `uv run pytest energy` (no network; 25 passed on 2026-11-14)
 - e2e needs Playwright's Chromium (`npx playwright install chromium`, free). Lighthouse needs Chrome installed.
 
 ## Definition of done for site changes

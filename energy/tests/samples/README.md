@@ -6,4 +6,4 @@ Small pieces of the real public data, cut down on 2026-11-14 so the tests never 
 - `f923_sample.xlsx`: EIA Form 923, 2024 final, sheet "Page 1 Generation and Fuel Data" with its six
   real header rows and three real plants: Solano Wind (7526, wind, monthly reporter `M`),
   Snake River (90, wind, `AM`), and Barry (3, natural gas).
-- `wind-week.json`: Open-Meteo archive response for 41.0 N, 95.0 W, 1 to 7 January 2023.
+- `wind-week.json`: Open-Meteo archive response, `models=era5`, for 41.0 N, 95.0 W, 1 to 7 January 2023.

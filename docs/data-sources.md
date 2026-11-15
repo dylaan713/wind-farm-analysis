@@ -12,8 +12,9 @@ no key or account. Re-check before relying on any of this after a long gap.
   `t_hh` (hub height, m), `t_rd` (rotor diameter, m), `xlong`, `ylat`.
 - **Also present and useful:** `t_retrofit` (0 or 1) and `t_retro_yr`. A retrofitted turbine means
   the farm was repowered, which the selection criteria exclude. `t_offshore` marks offshore turbines.
-- **Not yet confirmed:** how the API pages through all turbines (it looked like a standard
-  `limit`/`offset` interface), and the citation wording. The data page itself
+- **Tested live:** one request with a `select=` list of fields returned all 77,839 turbines (22 MB,
+  about two seconds), so no paging is needed. 1,348 distinct EIA plant ids.
+- **Not yet confirmed:** the citation wording. The data page itself
   (`https://energy.usgs.gov/uswtdb/data/`) refuses automated readers, so read it in a browser.
 
 ## 2. Reported generation: EIA Form 923
@@ -46,16 +47,22 @@ no key or account. Re-check before relying on any of this after a long gap.
 - **Hourly variables:** `wind_speed_100m`, `wind_direction_100m`, `temperature_2m`,
   `surface_pressure`. 100 m wind is listed as available (from ERA5, at 0.25°), from 1940.
 - **Parameters:** `latitude`, `longitude`, `start_date`, `end_date`, `hourly=…`,
-  `wind_speed_unit=ms` (the default is km/h), `timezone=GMT` (the default).
+  `wind_speed_unit=ms` (the default is km/h), `timezone=GMT` (the default), and **`models=era5`**.
+- **The model must be named.** Left to choose, the service answers with ERA5 before 2017 and with
+  ECMWF IFS, a different and finer model, from 2017 on. Tested live: for a week in 2010 and in 2016
+  the default and `models=era5` returned identical values; for a week in 2017 and in 2023 they
+  differed, and the default matched `models=ecmwf_ifs` exactly. The default also snaps to a point
+  off ERA5's quarter-degree grid (41.019, −95.007 for a request at 41.0, −95.0). The downloader
+  always sends `models=era5`, names its cache files by model, and refuses a reply that is off the grid.
 - **Key:** none for non-commercial use.
 - **Not stated on the docs page:** the rate limits and the exact licence terms. The page asks for
   a citation (Zippenfenig, P. (2023), *Open-Meteo.com Weather API*, Zenodo) and credits "Copernicus
   Climate Change Service information". Read the licence page before the site goes public.
-- **Not yet tested:** a live request. `wind_speed_100m` over a full year for one point is the first
-  thing to try once Python is set up.
+- **Tested live:** a full year (2023) for one point returned 8,760 hours with none missing.
 
 ## What this changes in the plan
 
 - The turbine source is a JSON API, not a CSV download.
 - Farm selection gains two ready-made filters: `t_retrofit = 0` and `Respondent Frequency = M`.
-- The capacity check needs either EIA Form 860 or the turbine database's own `p_cap`.
+- The capacity check uses the turbine database's own `p_cap` (project MW) against turbine count ×
+  rating. EIA Form 860 has not been brought in.

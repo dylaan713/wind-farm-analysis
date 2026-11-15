@@ -66,9 +66,9 @@ def test_parse_wind_converts_units_and_keeps_gaps():
     assert len(w) == 168
     assert str(w.index.tz) == "UTC"
     assert list(w.columns) == ["speed_100m", "dir_100m", "temp_k", "pressure_pa"]
-    assert w["speed_100m"].iloc[0] == pytest.approx(4.79)
-    assert w["temp_k"].iloc[0] == pytest.approx(3.8 + 273.15)
-    assert w["pressure_pa"].iloc[0] == pytest.approx(96810.0)
+    assert w["speed_100m"].iloc[0] == pytest.approx(3.77)          # ERA5, not the service's default model
+    assert w["temp_k"].iloc[0] == pytest.approx(payload["hourly"]["temperature_2m"][0] + 273.15)
+    assert w["pressure_pa"].iloc[0] == pytest.approx(payload["hourly"]["surface_pressure"][0] * 100.0)
     assert np.isnan(w["speed_100m"].iloc[5]) and w["speed_100m"].isna().sum() == 1
 
 
@@ -119,3 +119,30 @@ def test_generation_url_knows_which_years_are_archived():
     assert d.generation_url(2026, today_year=2026).endswith("/eia923/xls/f923_2026.zip")
     with pytest.raises(ValueError):
         d.generation_url(2007, today_year=2026)   # a different form before 2008
+
+
+def test_wind_is_pinned_to_era5_for_every_year(tmp_path, monkeypatch):
+    # Left to choose, the service answers with ERA5 before 2017 and a different, finer model after.
+    # A long series stitched from two models would show a jump that is not weather.
+    sample = (S / "wind-week.json").read_text()
+    seen = []
+
+    def fake_fetch(url, dest, *, params=None, force=False):
+        seen.append((url, dict(params), dest.name))
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(sample)
+        return dest
+
+    monkeypatch.setattr(d, "fetch", fake_fetch)
+    monkeypatch.setattr(d, "RAW", tmp_path)
+    d.wind(41.0, -95.0, 2016, 2018)
+    assert [p["models"] for _, p, _ in seen] == ["era5", "era5", "era5"]
+    assert all("era5" in name for _, _, name in seen)              # a cache made with another model is never reused
+    assert [p["start_date"] for _, p, _ in seen] == ["2016-01-01", "2017-01-01", "2018-01-01"]
+
+
+def test_parse_wind_refuses_a_point_that_is_off_the_era5_grid():
+    payload = json.loads((S / "wind-week.json").read_text())
+    payload["latitude"] = 41.01933                                   # what the other model returns
+    with pytest.raises(ValueError, match="ERA5"):
+        d.parse_wind(payload)
