@@ -13,3 +13,5 @@ data/raw/
 # Excel lock files
 ~$*.xlsx
 .superpowers/
+test-results/
+playwright-report/
