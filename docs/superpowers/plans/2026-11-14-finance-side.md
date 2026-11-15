@@ -20,7 +20,7 @@
 - Free only. No paid tiers, trials needing a card, or metered API keys.
 - Only the finance partner edits `finance/model.xlsx`. Binary files cannot be merged.
 - This plan touches only: `finance/`, `core/src/finance/`, `data/fixtures/finance-*.json`, `docs/notes/finance.md`, and `core/`'s package files if they do not exist yet. Everything else is Dylan's.
-- Work on a branch, open a pull request, Dylan reviews. Never commit to `main`.
+- Work on a branch, push it, open a pull request and stop. **Dylan does all merging.** Never merge, and never commit or push to `main`.
 - Commit with your GitHub noreply email. The repo will be public.
 - Every cost and price input carries a source in the `Sources` sheet. No employer material.
 - Nothing ships that you cannot explain out loud without notes.

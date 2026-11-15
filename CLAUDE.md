@@ -6,14 +6,21 @@ tested code, and an interactive site. **Read `HANDOFF.md` first.**
 
 - Design: `docs/superpowers/specs/2026-11-14-wind-farm-design.md`
 - Finance plan: `docs/superpowers/plans/2026-11-14-finance-side.md`
+- Energy plan: `docs/superpowers/plans/2026-11-14-energy-side.md`
+- Site design: `docs/superpowers/specs/2026-11-14-site-design.md` (mockup: `docs/design/first-screen-mockup.html`)
 
 Status 2026-11-14: planning. No code, no test gate and no build exist yet. Add the commands here
 when they do.
 
 ## Hard rules
 - Free only. No paid tiers, trials needing a card, or metered API keys.
-- Work on a branch and open a pull request; the other person reviews. Never commit to `main`.
-  (Agreed by both, 2026-11-14. GitHub does not enforce it while the repo is private.)
+- **Dylan manages this repo and does all merging.** Everyone else, and any agent working for them,
+  works on a branch, pushes it, opens a pull request and stops there. Never merge a pull request,
+  never push or commit to `main`, never force-push, never delete a branch you did not create, and
+  never change repo settings. If something is blocked waiting on a merge, say so in the pull
+  request and wait. (Dylan, 2026-11-14. GitHub does not enforce this while the repo is private,
+  so it is on each person and agent to keep it.)
+- Pull requests get a review from the other person before Dylan merges.
 - Only the finance partner edits `finance/model.xlsx`.
 - The repo will be public. Commit with a GitHub noreply email. No secrets; `.env` stays untracked.
 - Nothing is published that its owner cannot explain, and no skill is credited to someone who
