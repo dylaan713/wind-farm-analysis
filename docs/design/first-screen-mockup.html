@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Idea A, landscape, cooler and brighter</title>
+<style>
+:root{--ground:#FFFFFF;--ink:#0C1014;--surface:#F1F5F9;--signal:#FF5B14;--third:#667080;--line:#E3E8EE}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--ground);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.stage{position:relative;height:100svh;min-height:520px;overflow:hidden;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.over{position:absolute;pointer-events:none}
+.bar{left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-start;padding:clamp(14px,2.4vw,28px) clamp(16px,4vw,48px);font:600 12px/1.3 ui-monospace,SFMono-Regular,Menlo,monospace}
+.bar .name{font-weight:700;letter-spacing:.02em}
+.meter{text-align:right}
+.meter .k{color:var(--third)}
+.meter .v{display:block;font-size:clamp(20px,2.6vw,32px);font-weight:700;font-variant-numeric:tabular-nums;line-height:1.15}
+.meter .v b{color:var(--signal)}
+.head{left:clamp(16px,4vw,48px);top:clamp(84px,17vh,170px);font-weight:800;font-size:clamp(46px,9.4vw,150px);line-height:.88;letter-spacing:-.05em}
+.head em{font-style:normal;color:var(--signal)}
+.sub{left:clamp(16px,4vw,48px);top:calc(clamp(84px,17vh,170px) + clamp(100px,19vw,290px));max-width:34ch;color:var(--third);font-size:clamp(15px,1.5vw,19px)}
+.live{right:clamp(16px,4vw,48px);top:clamp(96px,20vh,190px);text-align:right;font:600 12px/1.3 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--third)}
+.live span{display:block;color:var(--ink);font-size:clamp(16px,1.8vw,22px);font-weight:700;font-variant-numeric:tabular-nums}
+.chips{left:clamp(16px,4vw,48px);right:clamp(16px,4vw,48px);bottom:clamp(14px,3vh,30px);display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.chip{position:relative;border:1.5px solid var(--ink);border-radius:999px;padding:11px 14px;font:700 12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:hidden;background:#fff;white-space:nowrap;text-overflow:ellipsis}
+.chip i{position:absolute;inset:0;background:var(--signal);transform-origin:left;transform:scaleX(0);z-index:0}
+.chip span{position:relative;z-index:1}
+.chiplabel{left:clamp(16px,4vw,48px);bottom:calc(clamp(14px,3vh,30px) + 52px);font:600 12px/1.3 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--third)}
+.notes{max-width:980px;margin:0 auto;padding:36px 16px 80px}
+.notes h2{font-size:22px;letter-spacing:-.02em;margin:0 0 10px}
+.notes li{margin:0 0 8px;color:#2d343c}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.pick{font:700 15px/1 system-ui,sans-serif;padding:14px 20px;border-radius:999px;border:2px solid var(--ink);background:#fff;color:var(--ink);cursor:pointer}
+.pick.selected{background:var(--signal);border-color:var(--signal)}
+.pick.selected::after{content:" ✓"}
+@media (max-width:640px){.chips{grid-template-columns:repeat(2,1fr)}.chiplabel{bottom:calc(clamp(14px,3vh,30px) + 100px)}.live{display:none}}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <canvas id="sky"></canvas><canvas id="land"></canvas>
+  <div class="over bar">
+    <div class="name">WIND-FARM <span style="color:var(--third);font-weight:600">· working title</span></div>
+    <div class="meter"><span class="k">made since you arrived</span><span class="v"><b id="kwh">0.00</b> kWh</span><span class="k" id="equiv">sample figures</span></div>
+  </div>
+  <div class="over head">Made of<br>moving <em>air.</em></div>
+  <div class="over sub">Sweep across the sky. You are the wind, and the page runs on what you make.</div>
+  <div class="over live">wind at hub<span id="ws">07.0 m/s</span>farm output<span id="kw">0 kW</span></div>
+  <div class="over chiplabel">your wind is powering up the story ↓</div>
+  <div class="over chips">
+    <div class="chip"><i></i><span>01 The wind</span></div>
+    <div class="chip"><i></i><span>02 One turbine</span></div>
+    <div class="chip"><i></i><span>03 The farm</span></div>
+    <div class="chip"><i></i><span>04 The money</span></div>
+  </div>
+</div>
+
+<div class="notes">
+  <h2>Back to the landscape, cooler and brighter</h2>
+  <ul>
+    <li><b>Same scene as before:</b> low sun, horizon, three turbines, the energy meter and the chapters that fill up.</li>
+    <li><b>Less warm.</b> The cream hills and brown-greys are now cool blue-greys, and the air is a cool grey.</li>
+    <li><b>Brighter.</b> The orange haze around the sun is cut by half, so more of the screen is clean white. The sun itself is the only strong colour.</li>
+  </ul>
+  <div class="row">
+    <button class="pick" data-choice="A4-yes-this-direction" onclick="window.toggleSelect&&toggleSelect(this)">Yes, this direction</button>
+    <button class="pick" data-choice="A4-close-but-change" onclick="window.toggleSelect&&toggleSelect(this)">Close, but change things</button>
+    <button class="pick" data-choice="A4-prefer-warm-original" onclick="window.toggleSelect&&toggleSelect(this)">I preferred the warmer original</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const INK='12,16,20', AIR='70,92,120', ORANGE='255,91,20';
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  const stage=document.getElementById('stage'), cs=document.getElementById('sky'), cl=document.getElementById('land');
+  let W,H,xs,xl,bg,on=true,t=0,px=-9999,py=-9999,vx=0,vy=0,kwh=0,last=performance.now();
+  const TUR=[{a:.80,s:1,front:true},{a:.57,s:.58,front:false},{a:.94,s:.42,front:false}].map(o=>({...o,ang:Math.random()*6,ms:7}));
+  const P=Array.from({length:620},()=>({x:Math.random()*1600,y:Math.random()*700,o:Math.random()<.14}));
+  const chips=[...document.querySelectorAll('.chip i')], need=[3,9,18,30];
+
+  const front=x=>H*.80+Math.sin(x*.004+1)*H*.035+Math.sin(x*.011)*H*.012;
+  const back =x=>H*.71+Math.sin(x*.003+2.2)*H*.05;
+
+  function size(){
+    const r=stage.getBoundingClientRect(); W=r.width; H=r.height;
+    for(const c of [cs,cl]){c.width=Math.round(W*dpr); c.height=Math.round(H*dpr);}
+    xs=cs.getContext('2d'); xs.setTransform(dpr,0,0,dpr,0,0);
+    xl=cl.getContext('2d'); xl.setTransform(dpr,0,0,dpr,0,0);
+    bg=document.createElement('canvas'); bg.width=cs.width; bg.height=cs.height;
+    const b=bg.getContext('2d'); b.setTransform(dpr,0,0,dpr,0,0);
+    b.fillStyle='#fff'; b.fillRect(0,0,W,H);
+    const sx=W*.66, sy=H*.69, g=b.createRadialGradient(sx,sy,0,sx,sy,Math.max(W,H)*.62);
+    g.addColorStop(0,`rgba(${ORANGE},.15)`); g.addColorStop(.3,`rgba(${ORANGE},.04)`); g.addColorStop(1,`rgba(${ORANGE},0)`);
+    b.fillStyle=g; b.fillRect(0,0,W,H);
+    b.fillStyle=`rgb(${ORANGE})`; b.beginPath(); b.arc(sx,sy,Math.min(W,H)*.13,0,7); b.fill();
+    xs.drawImage(bg,0,0,W,H);
+  }
+  size(); addEventListener('resize',size);
+  new IntersectionObserver(e=>on=e[0].isIntersecting,{threshold:.05}).observe(stage);
+
+  stage.addEventListener('pointermove',e=>{const r=stage.getBoundingClientRect(),nx=e.clientX-r.left,ny=e.clientY-r.top;
+    if(px>-9000){vx=vx*.6+(nx-px)*.4; vy=vy*.6+(ny-py)*.4;} px=nx; py=ny;});
+  stage.addEventListener('pointerleave',()=>{px=py=-9999;});
+
+  function wind(X,Y){
+    let u=1.55+.45*Math.sin(Y*.011+t*.7), v=.4*Math.sin(X*.008+t*.5+Y*.005);
+    const dx=X-px, dy=Y-py, k=Math.exp(-(dx*dx+dy*dy)/(190*190));
+    return [u+vx*.3*k, v+vy*.3*k];
+  }
+  function blade(x,cx,cy,a,R,w){x.save();x.translate(cx,cy);x.rotate(a);x.beginPath();x.moveTo(0,-5*w);x.quadraticCurveTo(R*.35,-11*w,R,-1.5*w);x.lineTo(R,1.5*w);x.quadraticCurveTo(R*.3,6*w,0,5*w);x.closePath();x.fill();x.restore();}
+  function hill(fn,fill,stroke,lw){xl.beginPath();xl.moveTo(0,H);for(let X=0;X<=W;X+=8)xl.lineTo(X,fn(X));xl.lineTo(W,fn(W));xl.lineTo(W,H);xl.closePath();xl.fillStyle=fill;xl.fill();
+    xl.beginPath();for(let X=0;X<=W;X+=8){X?xl.lineTo(X,fn(X)):xl.moveTo(X,fn(X));}xl.strokeStyle=stroke;xl.lineWidth=lw;xl.stroke();}
+  function turbine(T,col){
+    const bx=T.a*W, by=(T.front?front:back)(bx), hy=by-H*.36*T.s, R=Math.min(H*.21,W*.17)*T.s;
+    const [u,v]=wind(bx,hy), ms=Math.max(0,Math.hypot(u,v)*4.5); T.ms+=(ms-T.ms)*.12; T.ang+=Math.min(T.ms,18)*.0075/Math.sqrt(T.s);
+    xl.strokeStyle=col; xl.lineWidth=5*T.s; xl.lineCap='round'; xl.beginPath(); xl.moveTo(bx,by); xl.lineTo(bx,hy); xl.stroke();
+    xl.fillStyle=col; for(let i=0;i<3;i++) blade(xl,bx,hy,T.ang+i*2.0944,R,T.s);
+    xl.fillStyle=`rgb(${ORANGE})`; xl.beginPath(); xl.arc(bx,hy,8*T.s,0,7); xl.fill();
+    let kw=0; if(T.ms>=3&&T.ms<25) kw=3400*Math.min(1,Math.pow((T.ms-3)/9,3)); return kw;
+  }
+
+  let pulse=0;
+  function frame(now){
+    requestAnimationFrame(frame); if(!on){last=now;return;}
+    const dt=Math.min(.05,(now-last)/1000); last=now; t+=dt; vx*=.95; vy*=.95;
+
+    xs.globalAlpha=.085; xs.drawImage(bg,0,0,W,H); xs.globalAlpha=1;
+    for(const p of P){
+      const [u,v]=wind(p.x,p.y), nx=p.x+u*1.7, ny=p.y+v*1.7;
+      xs.strokeStyle=p.o?`rgba(${ORANGE},.95)`:`rgba(${AIR},.36)`; xs.lineWidth=p.o?1.7:1;
+      xs.beginPath(); xs.moveTo(p.x,p.y); xs.lineTo(nx,ny); xs.stroke(); p.x=nx; p.y=ny;
+      if(p.x>W+6||p.x<-6||p.y<-6||p.y>H*.86){p.x=u>=0?-4:W+4; p.y=Math.random()*H*.8;}
+    }
+
+    xl.clearRect(0,0,W,H);
+    hill(back,'#F1F5F9','rgba(70,92,120,.45)',1);
+    let total=turbine(TUR[1],'#8794A5')+turbine(TUR[2],'#8794A5');
+    hill(front,'#FFFFFF',`rgb(${INK})`,1.75);
+    total+=turbine(TUR[0],`rgb(${INK})`);
+
+    // energy pulses run along the ground from the near turbine toward the story
+    const hx=TUR[0].a*W; pulse+=dt*(40+total*.09);
+    xl.fillStyle=`rgb(${ORANGE})`;
+    for(let i=0;i<9;i++){const X=hx-((pulse+i*hx/9)%hx); xl.beginPath(); xl.arc(X,front(X),3.6,0,7); xl.fill();}
+
+    kwh+=total*dt/3600;
+    document.getElementById('kwh').textContent=kwh.toFixed(2);
+    document.getElementById('ws').textContent=TUR[0].ms.toFixed(1).padStart(4,'0')+' m/s';
+    document.getElementById('kw').textContent=(Math.round(total/10)*10).toLocaleString()+' kW';
+    document.getElementById('equiv').textContent='about '+Math.round(kwh/.015).toLocaleString()+' phone charges · sample figures';
+    chips.forEach((c,i)=>{const lo=i?need[i-1]:0; c.style.transform='scaleX('+Math.min(1,Math.max(0,(kwh-lo)/(need[i]-lo)))+')';});
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
