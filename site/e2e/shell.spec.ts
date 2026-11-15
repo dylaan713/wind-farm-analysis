@@ -49,3 +49,29 @@ test.describe('with JavaScript off', () => {
     await expect(page.locator('[data-meter]')).toBeHidden();
   });
 });
+
+test.describe('the still drawing', () => {
+  test.describe('with JavaScript off', () => {
+    test.use({ javaScriptEnabled: false });
+    test('fills the first screen', async ({ page }) => {
+      await page.goto('/');
+      const still = page.locator('[data-still]:visible');
+      await expect(still).toHaveCount(1);
+      const box = (await still.boundingBox())!, vp = page.viewportSize()!;
+      expect(box.width).toBeGreaterThanOrEqual(vp.width - 1);
+      expect(box.height).toBeGreaterThanOrEqual(Math.min(vp.height, 540) - 1);
+      await expect(page.getByRole('img', { name: 'A sun low over two hills with three wind turbines' })).toBeVisible();
+    });
+  });
+
+  test.describe('with reduced motion', () => {
+    test.use({ reducedMotion: 'reduce' });
+    test('shows and nothing animates', async ({ page }) => {
+      await page.goto('/');
+      await page.waitForTimeout(2000);
+      await expect(page.locator('[data-hero] canvas:visible')).toHaveCount(0);
+      await expect(page.locator('[data-still]:visible')).toHaveCount(1);
+      await expect(page.locator('[data-meter]')).toBeHidden();
+    });
+  });
+});
