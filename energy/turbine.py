@@ -19,6 +19,9 @@ CT_MAX = 0.9
 # Share of an ideal rotor's power that reaches the grid. Momentum theory alone treats electrical
 # output as everything the rotor took from the wind, and gives thrust about a third too low.
 # 0.78 is fitted to turbines that publish both curves: `uv run python -m energy.thrust_check`.
+# Contains information from the Open Energy Platform wind turbine library, © Reiner Lemoine
+# Institut, made available under the Open Database License (ODbL) 1.0. Only this number is
+# taken from it; none of its rows are in this repo, and none may be added.
 ROTOR_TO_GRID = 0.78
 
 

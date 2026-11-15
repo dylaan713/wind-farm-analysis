@@ -74,6 +74,10 @@ ideal rotor and the grid (blade drag, tip losses, wake rotation, gearbox, genera
 **Known weakness:** it still gives too little thrust in light wind (0.32 low at 4 m/s, 0.15 low
 at 5 m/s), where little energy is made. Re-run with `uv run python -m energy.thrust_check`.
 `core/src/energy/` (Task 8) uses the same 0.78.
+**Credit and limit.** The 0.78 contains information from the Open Energy Platform wind turbine
+library, © Reiner Lemoine Institut, made available under the Open Database License (ODbL) 1.0.
+That licence is share-alike for the database itself, so its rows are never committed, not even
+as test samples; the credit goes wherever the number is published, the site included.
 
 **Wake of one upstream turbine on one downstream turbine** (Jensen/Park). With `x` the distance downwind and `c` the distance crosswind, both in metres, and `r0` the rotor radius:
 ```
