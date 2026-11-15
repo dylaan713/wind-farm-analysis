@@ -1,0 +1,43 @@
+{
+  "model_version": "hand",
+  "scenarios": [
+    {
+      "name": "flat",
+      "inputs": {
+        "capacity_mw": 100,
+        "capex_per_kw": 1700,
+        "opex_per_kw_yr": 40,
+        "opex_escalation": 0,
+        "ppa_price_mwh": 40,
+        "ppa_escalation": 0,
+        "project_life_yrs": 25,
+        "degradation": 0,
+        "energy_p50_mwh": 350000,
+        "energy_p90_mwh": 350000,
+        "energy_p99_mwh": 350000,
+        "wind_case": "P50",
+        "debt_rate": 0.06,
+        "debt_tenor_yrs": 18,
+        "dscr_p50": 1.35,
+        "dscr_p99": 1.0,
+        "max_gearing": 0.75,
+        "tax_rate": 0,
+        "macrs_schedule": [0.2, 0.32, 0.192, 0.1152, 0.1152, 0.0576],
+        "ptc_enabled": 0,
+        "ptc_rate_mwh": 30,
+        "ptc_years": 10,
+        "discount_rate": 0.07
+      },
+      "outputs": {
+        "capex_total": 170000000.0,
+        "debt_amount": 80204470.23,
+        "equity_amount": 89795529.77,
+        "binding_case": "P50",
+        "equity_irr": 0.015907,
+        "project_irr_pretax": 0.032167,
+        "lcoe_mwh": 53.108,
+        "min_dscr": 1.35
+      }
+    }
+  ]
+}
