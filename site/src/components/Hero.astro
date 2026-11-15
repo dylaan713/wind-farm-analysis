@@ -22,7 +22,7 @@ const letters = (s: string) => [...s].map((ch) => (ch === ' ' ? ' ' : ch));
         {letters(l2 + ' ').map((ch) => <span data-lean>{ch}</span>)}{letters(l3).map((ch) => <span data-lean class="energy">{ch}</span>)}
       </span>
     </h1>
-    <p class="sub">{site.sub}</p>
+    <p class="sub" data-arrive>{site.sub}</p>
   </div>
 
   <dl class="readouts wrap" data-readouts>
@@ -30,7 +30,7 @@ const letters = (s: string) => [...s].map((ch) => (ch === ' ' ? ' ' : ch));
     <div><dt class="label">{site.readouts.output}</dt><dd class="num" data-read-output>0 kW</dd></div>
   </dl>
 
-  <nav class="chips wrap" aria-label="Chapters">
+  <nav class="chips wrap" aria-label="Chapters" data-arrive>
     {chips.map((c) => (
       <a class="chip num" href={`#${c.id}`} data-press data-chip>
         <i data-chip-fill></i>
@@ -58,6 +58,10 @@ const letters = (s: string) => [...s].map((ch) => (ch === ' ' ? ' ' : ch));
   .still.narrow { display: none; }
   @media (max-width: 639px) { .still.wide { display: none; } .still.narrow { display: block; } }
   .scene :global(canvas) { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .scene :global([data-layer='glow']) {
+    position: absolute; border-radius: 50%; opacity: 0; pointer-events: none; will-change: transform, opacity;
+    background: radial-gradient(circle, var(--signal) 27%, color-mix(in srgb, var(--signal) 0%, transparent) 70%);
+  }
   .copy { position: absolute; inset: clamp(84px, 16svh, 160px) 0 auto 0; pointer-events: none; }
   h1 { white-space: nowrap; }
   .line { display: block; }
@@ -73,6 +77,7 @@ const letters = (s: string) => [...s].map((ch) => (ch === ' ' ? ' ' : ch));
   }
   :global(html.live) .readouts { display: grid; gap: 6px; }
   .readouts dd { margin: 0; font-weight: 700; font-size: clamp(16px, 1.8vw, 22px); }
+  .readouts { text-shadow: 0 0 10px var(--ground), 0 0 3px var(--ground); }
   @media (max-width: 639px) { :global(html.live) .readouts { display: none; } }
 
   .chips {
@@ -85,9 +90,7 @@ const letters = (s: string) => [...s].map((ch) => (ch === ' ' ? ' ' : ch));
     padding: 13px 14px; border: 1.5px solid var(--ink); border-radius: 999px;
     background: var(--ground); color: var(--ink); text-decoration: none;
     font-weight: 700; font-size: 12px; line-height: 1.2; white-space: nowrap; text-overflow: ellipsis;
-    transition: transform 0.18s cubic-bezier(0.3, 1.5, 0.5, 1);
   }
-  .chip:active { transform: scale(0.96); }
   .chip i { position: absolute; inset: 0; background: var(--signal); transform-origin: left; transform: scaleX(0); }
   .chip span { position: relative; }
 </style>

@@ -16,7 +16,7 @@ const fire = (page: Page, type: string, id: number, x: number, y: number) =>
 
 test('the air moves on its own', async ({ page }) => {
   await open(page);
-  const air = page.locator('[data-hero] canvas').first();
+  const air = page.locator('[data-hero] canvas[data-layer="air"]');
   const a = await air.screenshot();
   await page.waitForTimeout(500);
   expect(Buffer.compare(a, await air.screenshot())).not.toBe(0);
@@ -117,7 +117,7 @@ test('resizing keeps it sharp', async ({ page }, info) => {
   await page.setViewportSize({ width: 900, height: 700 });
   await expect
     .poll(() => page.evaluate(() => {
-      const c = document.querySelector<HTMLCanvasElement>('[data-hero] canvas')!;
+      const c = document.querySelector<HTMLCanvasElement>('[data-hero] canvas[data-layer="top"]')!;
       return c.width === Math.round(c.getBoundingClientRect().width * Math.min(devicePixelRatio, 2));
     }))
     .toBe(true);
@@ -136,7 +136,7 @@ test('it pauses offscreen', async ({ page }) => {
 test('device pixel ratio is capped at 2', async ({ page }) => {
   await open(page);
   const ratio = await page.evaluate(() => {
-    const c = document.querySelector<HTMLCanvasElement>('[data-hero] canvas')!;
+    const c = document.querySelector<HTMLCanvasElement>('[data-hero] canvas[data-layer="top"]')!;
     return c.width / c.getBoundingClientRect().width;
   });
   expect(ratio).toBeLessThanOrEqual(2.01);

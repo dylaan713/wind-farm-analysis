@@ -3,6 +3,12 @@ import { expect, test } from '@playwright/test';
 
 test('no axe violations', async ({ page }) => {
   await page.goto('/');
+  // Audit the settled page: let the arrival finish and bring every chapter into view first,
+  // so nothing is measured halfway through a fade.
+  await page.waitForFunction(() => document.documentElement.classList.contains('arrived'));
+  for (const section of await page.locator('[data-chapter], footer').all()) await section.scrollIntoViewIfNeeded();
+  await expect.poll(() => page.locator('[data-reveal]:not(.is-in)').count()).toBe(0);
+  await page.waitForTimeout(700);
   const { violations } = await new AxeBuilder({ page }).analyze();
   expect(violations.map((v) => `${v.id}: ${v.nodes.length}`)).toEqual([]);
 });

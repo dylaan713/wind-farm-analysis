@@ -13,6 +13,16 @@ import { site } from '../content/site';
     <title>{site.name}</title>
     <meta name="description" content={site.description} />
     <meta name="robots" content="noindex" />
+    <script is:inline>
+      // Decide before first paint whether this visit gets the arrival. One per session, never under reduced motion.
+      (function () {
+        var d = document.documentElement;
+        try {
+          var skip = sessionStorage.getItem('wf-arrived') || matchMedia('(prefers-reduced-motion: reduce)').matches;
+          d.classList.add(skip ? 'arrived' : 'arriving');
+        } catch (e) { d.classList.add('arrived'); }
+      })();
+    </script>
   </head>
   <body>
     <TopBar />
@@ -21,5 +31,9 @@ import { site } from '../content/site';
       {site.chapters.map((chapter) => <Chapter chapter={chapter} />)}
     </main>
     <Footer />
+    <script>
+      import { startReactive } from '../scripts/reactive';
+      startReactive(document.documentElement);
+    </script>
   </body>
 </html>

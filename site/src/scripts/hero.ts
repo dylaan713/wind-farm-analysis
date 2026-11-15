@@ -4,7 +4,8 @@ import { addEnergy, chapterFill, demoPowerKw, particleCount, shownSpeed } from '
 import { palette, rgb } from '../lib/palette';
 import { frameBudget } from '../lib/perf';
 import { backHill, frontHill, layout, type Scene, type TurbinePose } from '../lib/scene/layout';
-import { fireBurst, movePointer, stepState, wind, type WindState } from '../lib/wind/field';
+import { leanTarget, stepSpring, type Spring } from '../lib/spring';
+import { fireBurst, gust, movePointer, stepState, wind, type WindState } from '../lib/wind/field';
 import { seedParticles, stepParticle, streakColour, type Particle } from '../lib/wind/particles';
 
 const TAU = Math.PI * 2;
@@ -12,8 +13,10 @@ const rgba = (hex: string, a: number) => { const [r, g, b] = rgb(hex); return `r
 
 const HOLD_SECONDS = 0.9, HOLD_SLOP_PX = 10, MAX_DPR = 2;
 const TRAIL_FADE = 0.08, SKY_TINT = 0.13, TURBINE_EASE = 0.12, FULL_GLOW_KW = 10200;
+const ARRIVAL_SECONDS = 1.2, SUMMARY_EVERY_S = 10;
 
 interface Rotor { pose: TurbinePose; angle: number; ms: number }
+interface Letter { el: HTMLElement; spring: Spring; cx: number; cy: number; shown: string }
 
 export function startHero(root: HTMLElement): () => void {
   const sceneEl = root.querySelector<HTMLElement>('[data-scene]');
@@ -31,14 +34,28 @@ export function startHero(root: HTMLElement): () => void {
 
 function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
   const html = document.documentElement;
-  const air = document.createElement('canvas'), land = document.createElement('canvas'), bg = document.createElement('canvas');
-  for (const c of [air, land]) { c.setAttribute('aria-hidden', 'true'); sceneEl.appendChild(c); }
-  const xa = air.getContext('2d')!, xl = land.getContext('2d')!, xb = bg.getContext('2d')!;
+  // Four layers, bottom to top. Only the first and last are redrawn every frame, and the air is
+  // kept at one canvas pixel per CSS pixel: it is soft by nature, and that is a quarter of the
+  // pixels to blend on a phone. The hills never change, so they are painted once per resize.
+  //   air    the sky, the sun and the moving streaks
+  //   glow   the sun's reactive halo: a CSS gradient, moved and faded by the compositor
+  //   hills  both ridges and the near turbine's shadow
+  //   top    turbines, grass, energy pulses, gust rings
+  const air = document.createElement('canvas'), hills = document.createElement('canvas'), land = document.createElement('canvas');
+  const bg = document.createElement('canvas'), glowEl = document.createElement('div');
+  air.dataset.layer = 'air'; hills.dataset.layer = 'hills'; land.dataset.layer = 'top'; glowEl.dataset.layer = 'glow';
+  for (const el of [air, glowEl, hills, land]) { el.setAttribute('aria-hidden', 'true'); sceneEl.appendChild(el); }
+  const xa = air.getContext('2d')!, xh = hills.getContext('2d')!, xl = land.getContext('2d')!, xb = bg.getContext('2d')!;
+  const shownGlow = { opacity: '', transform: '' };
+  // Streaks are drawn in a handful of batches instead of one path each.
+  const E_STEPS = 5, batches: number[][] = Array.from({ length: (E_STEPS + 1) * 2 }, () => []);
 
   const meterEl = document.querySelector<HTMLElement>('[data-meter-value]');
   const windEl = root.querySelector<HTMLElement>('[data-read-wind]');
   const outEl = root.querySelector<HTMLElement>('[data-read-output]');
   const fills = [...root.querySelectorAll<HTMLElement>('[data-chip-fill]')];
+  const summaryEl = document.querySelector<HTMLElement>('[data-meter-summary]');
+  const letters: Letter[] = [...root.querySelectorAll<HTMLElement>('[data-lean]')].map((el) => ({ el, spring: { value: 0, velocity: 0 }, cx: 0, cy: 0, shown: '' }));
   const shown = { meter: '', wind: '', out: '', fills: ['', '', '', ''] };
 
   let scene: Scene = layout(1, 1), W = 1, H = 1, dpr = 1;
@@ -48,31 +65,67 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
   let downId: number | null = null, holding = false, downX = 0, downY = 0;
   let inView = true, visible = document.visibilityState !== 'hidden', raf = 0, last = 0, painted = false, halved = false;
   const budget = frameBudget();
+  // The sun rises once, on the visit's first screen; it starts below the ridge and eases up.
+  let arrival = html.classList.contains('arriving') ? 0 : 1, sunDrop = 0, summaryAt = -Infinity;
   const running = () => inView && visible;
 
   function size() {
     const r = root.getBoundingClientRect();
     W = Math.max(1, r.width); H = Math.max(1, r.height); dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
-    for (const c of [air, land]) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
-    xa.setTransform(dpr, 0, 0, dpr, 0, 0); xl.setTransform(dpr, 0, 0, dpr, 0, 0);
+    for (const c of [hills, land]) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+    air.width = Math.round(W); air.height = Math.round(H);
+    xa.setTransform(air.width / W, 0, 0, air.height / H, 0, 0);
+    xh.setTransform(dpr, 0, 0, dpr, 0, 0); xl.setTransform(dpr, 0, 0, dpr, 0, 0);
     scene = layout(W, H);
     state = { ...state, w: W, s: scene.s };
     rotors = scene.turbines.map((pose, i) => ({ pose, angle: rotors[i]?.angle ?? i * 1.7, ms: rotors[i]?.ms ?? 7 }));
     const want = Math.round(particleCount(W) / (halved ? 2 : 1));
     if (particles.length !== want) particles = seedParticles(want, W, H, Math.random);
 
-    // The still part of the sky, painted once at half resolution and reused every frame.
-    bg.width = Math.max(1, Math.round((W * dpr) / 2)); bg.height = Math.max(1, Math.round((H * dpr) / 2));
+    if (arrival < 1) sunDrop = (1 - arrival) ** 3 * scene.sun.r * 2.4;
+    measureLetters();
+    paintSky();
+    xa.drawImage(bg, 0, 0, W, H);
+    paintHills();
+    const d = scene.sun.r * 6.2;
+    Object.assign(glowEl.style, { width: `${d}px`, height: `${d}px`, left: `${scene.sun.x - d / 2}px`, top: `${scene.sun.y - d / 2}px` });
+  }
+
+  function paintHills() {
+    xh.clearRect(0, 0, W, H);
+    hill(backHill, palette.surface, rgba(palette.air, 0.55), 1);
+    hill(frontHill, palette.ground, palette.ink, 1.75);
+    // Warm light, cool shadow: the near turbine's shadow falls away from the sun, in the air colour.
+    const n = scene.turbines[0]!, sx = n.baseX + (n.baseX - scene.sun.x) * 1.3, sy = n.baseY + Math.min(W * 0.3, 260) * 0.3;
+    const shade = xh.createLinearGradient(n.baseX, n.baseY, sx, sy);
+    shade.addColorStop(0, rgba(palette.air, 0.28)); shade.addColorStop(1, rgba(palette.air, 0));
+    xh.strokeStyle = shade; xh.lineWidth = 9; xh.lineCap = 'round';
+    xh.beginPath(); xh.moveTo(n.baseX, n.baseY + 4); xh.lineTo(sx, sy); xh.stroke();
+  }
+
+  /** Where each headline letter sits, so the wind can be sampled at it. Measured with leans cleared. */
+  function measureLetters() {
+    const r = root.getBoundingClientRect();
+    for (const l of letters) {
+      if (l.shown) { l.el.style.transform = ''; l.shown = ''; }
+      const b = l.el.getBoundingClientRect();
+      l.cx = b.left - r.left + b.width / 2; l.cy = b.top - r.top + b.height / 2;
+    }
+  }
+
+  /** The still part of the sky, painted at half resolution and reused every frame. */
+  function paintSky() {
+    bg.width = Math.max(1, Math.round(W / 2)); bg.height = Math.max(1, Math.round(H / 2));
     xb.setTransform(bg.width / W, 0, 0, bg.height / H, 0, 0);
     xb.fillStyle = palette.ground; xb.fillRect(0, 0, W, H);
     const sky = xb.createLinearGradient(0, 0, 0, H * 0.72);
     sky.addColorStop(0, rgba(palette.air, SKY_TINT)); sky.addColorStop(1, rgba(palette.air, 0));
     xb.fillStyle = sky; xb.fillRect(0, 0, W, H);
-    const { sun } = scene, halo = xb.createRadialGradient(sun.x, sun.y, 0, sun.x, sun.y, Math.max(W, H) * 0.5);
+    const sun = { ...scene.sun, y: scene.sun.y + sunDrop };
+    const halo = xb.createRadialGradient(sun.x, sun.y, 0, sun.x, sun.y, Math.max(W, H) * 0.5);
     halo.addColorStop(0, rgba(palette.signal, 0.2)); halo.addColorStop(0.3, rgba(palette.signal, 0.05)); halo.addColorStop(1, rgba(palette.signal, 0));
     xb.fillStyle = halo; xb.fillRect(0, 0, W, H);
     xb.fillStyle = palette.signal; xb.beginPath(); xb.arc(sun.x, sun.y, sun.r, 0, TAU); xb.fill();
-    xa.drawImage(bg, 0, 0, W, H);
   }
 
   // ---- input -------------------------------------------------------------
@@ -122,12 +175,12 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
 
   // ---- drawing -----------------------------------------------------------
   function hill(fn: (x: number, h: number) => number, fill: string, stroke: string, lw: number) {
-    xl.beginPath(); xl.moveTo(0, H);
-    for (let x = 0; x <= W; x += 8) xl.lineTo(x, fn(x, H));
-    xl.lineTo(W, fn(W, H)); xl.lineTo(W, H); xl.closePath(); xl.fillStyle = fill; xl.fill();
-    xl.beginPath();
-    for (let x = 0; x <= W; x += 8) { if (x) xl.lineTo(x, fn(x, H)); else xl.moveTo(x, fn(x, H)); }
-    xl.lineTo(W, fn(W, H)); xl.strokeStyle = stroke; xl.lineWidth = lw; xl.stroke();
+    xh.beginPath(); xh.moveTo(0, H);
+    for (let x = 0; x <= W; x += 8) xh.lineTo(x, fn(x, H));
+    xh.lineTo(W, fn(W, H)); xh.lineTo(W, H); xh.closePath(); xh.fillStyle = fill; xh.fill();
+    xh.beginPath();
+    for (let x = 0; x <= W; x += 8) { if (x) xh.lineTo(x, fn(x, H)); else xh.moveTo(x, fn(x, H)); }
+    xh.lineTo(W, fn(W, H)); xh.strokeStyle = stroke; xh.lineWidth = lw; xh.stroke();
   }
 
   function turbine(r: Rotor, colour: string, k: number): number {
@@ -152,36 +205,37 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
 
     // Air: fade the last frame toward the still sky, then draw each particle's new streak.
     xa.globalAlpha = 1 - (1 - TRAIL_FADE) ** k; xa.drawImage(bg, 0, 0, W, H); xa.globalAlpha = 1; xa.lineCap = 'round';
+    for (const b of batches) b.length = 0;
+    const unit = 1.7 * k || 1;
     for (let i = 0; i < particles.length; i++) {
-      const before = particles[i]!, { p, from } = stepParticle(before, state, scene, dt, Math.random);
+      const { p, from } = stepParticle(particles[i]!, state, scene, dt, Math.random);
       particles[i] = p;
-      const c = streakColour(p.e, Math.hypot(p.x - from[0], p.y - from[1]) / (1.7 * k || 1));
-      xa.strokeStyle = `rgba(${c.r},${c.g},${c.b},${c.a})`; xa.lineWidth = c.width;
-      xa.beginPath(); xa.moveTo(from[0], from[1]); xa.lineTo(p.x, p.y); xa.stroke();
+      const fast = Math.hypot(p.x - from[0], p.y - from[1]) / unit > 2.5 ? 1 : 0;
+      batches[Math.round(p.e * E_STEPS) * 2 + fast]!.push(from[0], from[1], p.x, p.y);
+    }
+    for (let b = 0; b < batches.length; b++) {
+      const seg = batches[b]!;
+      if (!seg.length) continue;
+      const c = streakColour((b >> 1) / E_STEPS, b & 1 ? 5 : 1.6);
+      xa.strokeStyle = `rgba(${c.r},${c.g},${c.b},${c.a})`; xa.lineWidth = c.width; xa.beginPath();
+      for (let j = 0; j < seg.length; j += 4) { xa.moveTo(seg[j]!, seg[j + 1]!); xa.lineTo(seg[j + 2]!, seg[j + 3]!); }
+      xa.stroke();
     }
 
+    // The sun answers the farm: more output, more glow. Only opacity and transform change.
+    const glow = Math.min(1, totalKw / FULL_GLOW_KW);
+    const opacity = (0.1 + 0.38 * glow).toFixed(2), transform = `translateY(${sunDrop.toFixed(1)}px) scale(${((1.5 + 1.6 * glow) / 3.1).toFixed(3)})`;
+    if (opacity !== shownGlow.opacity) glowEl.style.opacity = shownGlow.opacity = opacity;
+    if (transform !== shownGlow.transform) glowEl.style.transform = shownGlow.transform = transform;
+
     xl.clearRect(0, 0, W, H);
-    // The sun answers the farm: more output, more glow.
-    const { sun } = scene, glow = Math.min(1, totalKw / FULL_GLOW_KW), gr = sun.r * (1.5 + 1.6 * glow);
-    const g = xl.createRadialGradient(sun.x, sun.y, sun.r * 0.9, sun.x, sun.y, gr);
-    g.addColorStop(0, rgba(palette.signal, 0.1 + 0.38 * glow)); g.addColorStop(1, rgba(palette.signal, 0));
-    xl.fillStyle = g; xl.beginPath(); xl.arc(sun.x, sun.y, gr, 0, TAU); xl.fill();
     for (const b of state.bursts) {
       xl.strokeStyle = rgba(palette.air, 0.35 * Math.max(0, 1 - b.r / (1.1 * W))); xl.lineWidth = 2;
       xl.beginPath(); xl.arc(b.x, b.y, b.r, 0, TAU); xl.stroke();
     }
 
-    const [near, farA, farB] = rotors as [Rotor, Rotor, Rotor];
-    hill(backHill, palette.surface, rgba(palette.air, 0.55), 1);
+    const [near, farA, farB] = rotors as [Rotor, Rotor, Rotor], n = near.pose;
     let total = turbine(farA, palette.farTurbine, k) + turbine(farB, palette.farTurbine, k);
-    hill(frontHill, palette.ground, palette.ink, 1.75);
-
-    // Warm light, cool shadow: the near turbine's shadow falls away from the sun, in the air colour.
-    const n = near.pose, sx = n.baseX + (n.baseX - sun.x) * 1.3, sy = n.baseY + Math.min(W * 0.3, 260) * 0.3;
-    const shade = xl.createLinearGradient(n.baseX, n.baseY, sx, sy);
-    shade.addColorStop(0, rgba(palette.air, 0.28)); shade.addColorStop(1, rgba(palette.air, 0));
-    xl.strokeStyle = shade; xl.lineWidth = 9; xl.lineCap = 'round';
-    xl.beginPath(); xl.moveTo(n.baseX, n.baseY + 4); xl.lineTo(sx, sy); xl.stroke();
 
     // Grass on the ridge bends with the air above it.
     xl.strokeStyle = rgba(palette.ink, 0.6); xl.lineWidth = 1; xl.beginPath();
@@ -209,6 +263,15 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
     }
   }
 
+  /** The headline leans in the wind the visitor makes, and only that wind, then springs back. */
+  function lean(dt: number) {
+    for (const l of letters) {
+      l.spring = stepSpring(l.spring, leanTarget(gust(l.cx, l.cy, state)[0]), dt);
+      const v = l.spring.value, t = Math.abs(v) > 0.05 ? `translateX(${(v * 0.2).toFixed(2)}px) skewX(${(-v).toFixed(2)}deg)` : '';
+      if (t !== l.shown) { l.shown = t; l.el.style.transform = t; }
+    }
+  }
+
   function write() {
     const set = (el: HTMLElement | null, key: 'meter' | 'wind' | 'out', text: string) => {
       if (el && shown[key] !== text) { shown[key] = text; el.textContent = text; }
@@ -216,6 +279,10 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
     set(meterEl, 'meter', kwh.toFixed(2));
     set(windEl, 'wind', `${(rotors[0]?.ms ?? 0).toFixed(1).padStart(4, '0')} m/s`);
     set(outEl, 'out', `${(Math.round(totalKw / 10) * 10).toLocaleString('en-US')} kW`);
+    if (summaryEl && state.t - summaryAt >= SUMMARY_EVERY_S) {
+      summaryAt = state.t;
+      summaryEl.textContent = `Your wind has made ${kwh.toFixed(1)} kilowatt hours on a demo turbine, not the real farm.`;
+    }
     chapterFill(kwh).forEach((f, i) => {
       const t = `scaleX(${f.toFixed(3)})`, el = fills[i];
       if (el && shown.fills[i] !== t) { shown.fills[i] = t; el.style.transform = t; }
@@ -231,7 +298,14 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
 
     if (holding) charge = Math.min(1, charge + dt / HOLD_SECONDS);
     state = stepState(state, dt);
+    if (arrival < 1) {
+      arrival = Math.min(1, arrival + dt / ARRIVAL_SECONDS);
+      sunDrop = (1 - arrival) ** 3 * scene.sun.r * 2.4;
+      paintSky();
+      if (arrival === 1) measureLetters(); // the headline has finished moving into place
+    }
     draw(dt);
+    lean(dt);
     kwh = addEnergy(kwh, totalKw, dt);
     write();
     if (!painted) { painted = true; html.classList.add('live'); }
@@ -245,6 +319,7 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
   const onVisibility = () => { visible = document.visibilityState !== 'hidden'; wake(); };
 
   size(); io.observe(root); ro.observe(root);
+  document.fonts?.ready.then(measureLetters).catch(() => {});
   document.addEventListener('visibilitychange', onVisibility);
   window.addEventListener('scroll', onScroll, { passive: true });
   root.addEventListener('pointerdown', onDown); root.addEventListener('pointermove', onMove);
@@ -266,7 +341,9 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
     root.removeEventListener('pointerdown', onDown); root.removeEventListener('pointermove', onMove);
     root.removeEventListener('pointerup', onUp); root.removeEventListener('pointercancel', onCancel);
     root.removeEventListener('pointerleave', onLeave); root.removeEventListener('contextmenu', onMenu);
-    air.remove(); land.remove(); html.classList.remove('live');
+    for (const el of [air, glowEl, hills, land]) el.remove();
+    html.classList.remove('live');
+    for (const l of letters) l.el.style.transform = '';
     delete (window as unknown as { __hero?: unknown }).__hero;
   };
 }

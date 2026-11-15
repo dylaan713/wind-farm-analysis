@@ -5,11 +5,11 @@ const { chapter: c } = Astro.props;
 const L = site.creditLabels;
 ---
 <section class="chapter wrap" id={c.id} aria-labelledby={`${c.id}-title`} data-chapter data-status={c.status}>
-  <p class="number num" aria-hidden="true">{c.number}</p>
-  <h2 class="title" id={`${c.id}-title`}>{c.title}</h2>
+  <p class="number num" aria-hidden="true" data-reveal>{c.number}</p>
+  <h2 class="title" id={`${c.id}-title`} data-reveal>{c.title}</h2>
   <div class="body" data-chapter-body>
-    <p class="summary measure">{c.summary}</p>
-    <dl class="credit">
+    <p class="summary measure" data-reveal>{c.summary}</p>
+    <dl class="credit" data-reveal>
       <div><dt class="label">{L.owner}</dt><dd>{site.ownerLabel[c.credit.owner]}</dd></div>
       <div><dt class="label">{L.ai}</dt><dd>{c.credit.ai}</dd></div>
       <div><dt class="label">{L.checked}</dt><dd>{c.credit.checked}</dd></div>

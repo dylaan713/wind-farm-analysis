@@ -2,12 +2,13 @@
 import { site } from '../content/site';
 ---
 <header class="topbar wrap" data-topbar>
-  <a class="name num" href="#top">{site.name.toUpperCase()}</a>
+  <a class="name num" href="#top" data-magnetic>{site.name.toUpperCase()}</a>
   <div class="meter" data-meter aria-live="off">
     <span class="label">{site.meter.label}</span>
     <span class="value num"><b data-meter-value>0.00</b> {site.meter.unit}</span>
     <span class="label note">{site.meter.note}</span>
   </div>
+  <p class="sr-only" data-meter-summary aria-live="polite"></p>
 </header>
 
 <style>
@@ -17,12 +18,12 @@ import { site } from '../content/site';
     padding-block: clamp(12px, 2.2vw, 24px);
     pointer-events: none;
   }
-  /* A frosted backing so the bar stays readable over the chapters. It fades out at its
+  /* A light backing so the bar stays readable over the chapters. It fades out at its
      lower edge, so it never draws a hard line across the sky. */
   .topbar::before {
     content: ''; position: absolute; inset: 0 0 -18px 0; z-index: -1;
-    background: color-mix(in srgb, var(--ground) 70%, transparent);
-    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    /* No backdrop blur: blurring a canvas that changes every frame is costly on phones. */
+    background: color-mix(in srgb, var(--ground) 88%, transparent);
     -webkit-mask-image: linear-gradient(#000 45%, transparent); mask-image: linear-gradient(#000 45%, transparent);
   }
   .name {
@@ -31,9 +32,15 @@ import { site } from '../content/site';
   }
   .meter { display: none; text-align: right; line-height: 1.15; }
   :global(html.live) .meter { display: grid; justify-items: end; }
+  .name { transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
   .value { font-weight: 700; font-size: clamp(18px, 2.4vw, 30px); }
   .value b { color: var(--signal); font-weight: 700; }
   /* Small orange text fails contrast on white; below 24px the number uses the deep orange. */
   @media (max-width: 899px) { .value b { color: var(--signal-deep); } }
-  @media (max-width: 639px) { .note { display: none; } }
+  /* On a phone the label and the number share a line, so the demo note still fits under them. */
+  @media (max-width: 639px) {
+    :global(html.live) .meter { grid-template-columns: auto auto; column-gap: 8px; align-items: baseline; }
+    .note { grid-column: 1 / -1; }
+    .value { font-size: 17px; }
+  }
 </style>

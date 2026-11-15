@@ -2,13 +2,17 @@
 // never the real farm, and the page labels them that way. When core/src/energy exists,
 // demoPowerKw is replaced by the real turbine's power curve.
 
-const MS_PER_UNIT = 4.5;
+const MS_PER_UNIT = 4.5, MAX_SHOWN_MS = 24;
 const RATED_KW = 3400, CUT_IN = 3, RATED_AT = 12, CUT_OUT = 25;
 const FILL_AT = [3, 9, 18, 30] as const;
 
-/** Wind speed shown to the visitor, in m/s, from the field's px-per-step wind. */
+/**
+ * Wind speed shown to the visitor, in m/s, from the field's px-per-step wind. A fast sweep can
+ * push the field far past anything real, so the reading tops out just under the turbine's cut-out:
+ * pushing harder never switches the demo turbine off.
+ */
 export function shownSpeed(u: number, v: number): number {
-  return Math.hypot(u, v) * MS_PER_UNIT;
+  return Math.min(MAX_SHOWN_MS, Math.hypot(u, v) * MS_PER_UNIT);
 }
 
 export function demoPowerKw(ms: number): number {

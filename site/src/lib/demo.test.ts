@@ -2,6 +2,11 @@ import { addEnergy, chapterFill, demoPowerKw, particleCount, shownSpeed } from '
 
 test('shown speed', () => expect(shownSpeed(1.55, 0)).toBeCloseTo(6.975, 6));
 
+test('a wild sweep tops out just under cut-out, so pushing harder never shuts the demo turbine down', () => {
+  expect(shownSpeed(20, 0)).toBe(24);
+  expect(demoPowerKw(shownSpeed(20, 0))).toBeCloseTo(3400, 6);
+});
+
 test('demo power', () => {
   expect(demoPowerKw(2.99)).toBe(0);
   expect(demoPowerKw(3)).toBe(0);
