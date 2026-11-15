@@ -1,0 +1,14 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
+.astro/
+.venv/
+__pycache__/
+.pytest_cache/
+# raw downloads are large; commit the download scripts, not the data
+data/raw/
+# Excel lock files
+~$*.xlsx
