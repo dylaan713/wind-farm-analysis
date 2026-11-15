@@ -7,7 +7,8 @@ tested code, and an interactive site. **Read `HANDOFF.md` first.**
 - Design: `docs/superpowers/specs/2026-11-14-wind-farm-design.md`
 - Finance plan: `docs/superpowers/plans/2026-11-14-finance-side.md`
 - Energy plan: `docs/superpowers/plans/2026-11-14-energy-side.md`
-- Site design: `docs/superpowers/specs/2026-11-14-site-design.md` (mockup: `docs/design/first-screen-mockup.html`)
+- Site design: `docs/superpowers/specs/2026-11-14-site-design.md` (mockup: `docs/design/first-screen-mockup-colour.html`)
+- Site plan, part 1: `docs/superpowers/plans/2026-11-14-site-foundation-and-first-screen.md`
 
 Status 2026-11-14: planning. No code, no test gate and no build exist yet. Add the commands here
 when they do.
@@ -24,7 +25,8 @@ when they do.
 - Only the finance partner edits `finance/model.xlsx`.
 - The repo will be public. Commit with a GitHub noreply email. No secrets; `.env` stays untracked.
 - Nothing is published that its owner cannot explain, and no skill is credited to someone who
-  did not use it. The validation error is published as measured.
+  did not use it. The validation error is published as measured, and described as "calibrated
+  on earlier years, tested on a held-out year" — never as a from-scratch prediction.
 - Educational model: not investment, tax or engineering advice.
 
 ## Capability
