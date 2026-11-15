@@ -1,0 +1,69 @@
+---
+import { site } from '../content/site';
+const [l1, l2, l3] = site.headline;
+const full = site.headline.join(' ');
+const chips = site.heroChips.map((id) => site.chapters.find((c) => c.id === id)!);
+const letters = (s: string) => [...s].map((ch) => (ch === ' ' ? ' ' : ch));
+---
+<section class="hero" id="top" data-hero>
+  <div class="scene" data-scene aria-hidden="true"><slot name="scene" /></div>
+
+  <div class="copy wrap">
+    <h1 class="display" aria-label={full}>
+      <span class="line" aria-hidden="true">{letters(l1).map((ch) => <span data-lean>{ch}</span>)}</span>
+      <span class="line" aria-hidden="true">
+        {letters(l2 + ' ').map((ch) => <span data-lean>{ch}</span>)}{letters(l3).map((ch) => <span data-lean class="energy">{ch}</span>)}
+      </span>
+    </h1>
+    <p class="sub">{site.sub}</p>
+  </div>
+
+  <dl class="readouts wrap" data-readouts>
+    <div><dt class="label">{site.readouts.wind}</dt><dd class="num" data-read-wind>00.0 m/s</dd></div>
+    <div><dt class="label">{site.readouts.output}</dt><dd class="num" data-read-output>0 kW</dd></div>
+  </dl>
+
+  <nav class="chips wrap" aria-label="Chapters">
+    {chips.map((c) => (
+      <a class="chip num" href={`#${c.id}`} data-press data-chip>
+        <i data-chip-fill></i>
+        <span>{c.number} {c.title}</span>
+      </a>
+    ))}
+  </nav>
+</section>
+
+<style>
+  .hero { position: relative; height: 100svh; min-height: 540px; overflow: hidden; background: var(--ground); }
+  .scene { position: absolute; inset: 0; }
+  .copy { position: absolute; inset: clamp(84px, 16svh, 160px) 0 auto 0; pointer-events: none; }
+  h1 { white-space: nowrap; }
+  .line { display: block; }
+  .line > span { display: inline-block; transform-origin: 50% 100%; will-change: transform; }
+  .energy { color: var(--signal); }
+  .sub { margin-top: clamp(14px, 2vw, 26px); max-width: 34ch; color: var(--third); font-size: clamp(15px, 1.5vw, 19px); }
+
+  .readouts {
+    display: none; position: absolute; inset: clamp(96px, 20svh, 190px) 0 auto auto; margin: 0;
+    text-align: right; pointer-events: none;
+  }
+  :global(html.live) .readouts { display: grid; gap: 6px; }
+  .readouts dd { margin: 0; font-weight: 700; font-size: clamp(16px, 1.8vw, 22px); }
+  @media (max-width: 639px) { :global(html.live) .readouts { display: none; } }
+
+  .chips {
+    position: absolute; inset: auto 0 clamp(14px, 3svh, 30px) 0;
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+  }
+  @media (min-width: 640px) { .chips { grid-template-columns: repeat(4, 1fr); } }
+  .chip {
+    position: relative; overflow: hidden; display: block; min-height: 44px;
+    padding: 13px 14px; border: 1.5px solid var(--ink); border-radius: 999px;
+    background: var(--ground); color: var(--ink); text-decoration: none;
+    font-weight: 700; font-size: 12px; line-height: 1.2; white-space: nowrap; text-overflow: ellipsis;
+    transition: transform 0.18s cubic-bezier(0.3, 1.5, 0.5, 1);
+  }
+  .chip:active { transform: scale(0.96); }
+  .chip i { position: absolute; inset: 0; background: var(--signal); transform-origin: left; transform: scaleX(0); }
+  .chip span { position: relative; }
+</style>

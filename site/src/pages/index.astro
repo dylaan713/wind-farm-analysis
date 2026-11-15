@@ -1,12 +1,25 @@
 ---
+import '../styles/global.css';
+import Chapter from '../components/Chapter.astro';
+import Footer from '../components/Footer.astro';
+import Hero from '../components/Hero.astro';
+import TopBar from '../components/TopBar.astro';
+import { site } from '../content/site';
 ---
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>wind-farm</title>
+    <title>{site.name}</title>
+    <meta name="description" content={site.description} />
+    <meta name="robots" content="noindex" />
   </head>
   <body>
-    <h1>wind-farm</h1>
+    <TopBar />
+    <main>
+      <Hero />
+      {site.chapters.map((chapter) => <Chapter chapter={chapter} />)}
+    </main>
+    <Footer />
   </body>
 </html>

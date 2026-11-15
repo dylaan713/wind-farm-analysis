@@ -1,0 +1,18 @@
+---
+import { site } from '../content/site';
+const people = [site.people.dylan, site.people.partner];
+---
+<footer class="footer wrap">
+  <p class="disclaimer">{site.disclaimer}</p>
+  <ul class="people">
+    {people.map((p) => <li>{p.name ? `${p.name} · ${p.role}` : p.role}</li>)}
+  </ul>
+  <p class="sources">{site.sourcesNote}</p>
+  {site.repoUrl && <p><a href={site.repoUrl}>The code</a></p>}
+</footer>
+
+<style>
+  .footer { padding-block: 56px 72px; border-top: 1px solid var(--line); display: grid; gap: 14px; color: var(--third); font-size: 15px; }
+  .disclaimer { color: var(--ink); font-weight: 600; }
+  .people { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 22px; }
+</style>
