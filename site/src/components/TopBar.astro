@@ -16,9 +16,14 @@ import { site } from '../content/site';
     display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
     padding-block: clamp(12px, 2.2vw, 24px);
     pointer-events: none;
-    /* A light frosted backing so the bar stays readable over the chapters below. */
-    background: color-mix(in srgb, var(--ground) 78%, transparent);
+  }
+  /* A frosted backing so the bar stays readable over the chapters. It fades out at its
+     lower edge, so it never draws a hard line across the sky. */
+  .topbar::before {
+    content: ''; position: absolute; inset: 0 0 -18px 0; z-index: -1;
+    background: color-mix(in srgb, var(--ground) 70%, transparent);
     -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    -webkit-mask-image: linear-gradient(#000 45%, transparent); mask-image: linear-gradient(#000 45%, transparent);
   }
   .name {
     pointer-events: auto; font-weight: 700; font-size: 12px; letter-spacing: 0.04em;

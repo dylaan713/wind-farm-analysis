@@ -40,8 +40,19 @@ const letters = (s: string) => [...s].map((ch) => (ch === ' ' ? ' ' : ch));
   </nav>
 </section>
 
+<script>
+  import { startHero } from '../scripts/hero';
+  const hero = document.querySelector<HTMLElement>('[data-hero]');
+  if (hero) startHero(hero);
+</script>
+
 <style>
   .hero { position: relative; height: 100svh; min-height: 540px; overflow: hidden; background: var(--ground); }
+  /* Sweeping sideways pushes the wind; vertical drags still scroll the page. A long press
+     charges a gust, so it must not select text or open the callout menu. */
+  .hero { touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  /* Once the first live frame is painted the still drawing steps aside. */
+  :global(html.live) .still { visibility: hidden; }
   .scene { position: absolute; inset: 0; }
   .still { position: absolute; inset: 0; }
   .still.narrow { display: none; }
@@ -52,7 +63,9 @@ const letters = (s: string) => [...s].map((ch) => (ch === ' ' ? ' ' : ch));
   .line { display: block; }
   .line > span { display: inline-block; transform-origin: 50% 100%; will-change: transform; }
   .energy { color: var(--signal); }
-  .sub { margin-top: clamp(14px, 2vw, 26px); max-width: 34ch; color: var(--third); font-size: clamp(15px, 1.5vw, 19px); }
+  .sub { margin-top: clamp(14px, 2vw, 26px); max-width: 34ch; color: var(--third); font-size: clamp(15px, 1.5vw, 19px);
+    /* A soft ground-coloured halo keeps the line readable while air moves behind it. */
+    text-shadow: 0 0 10px var(--ground), 0 0 3px var(--ground); }
 
   .readouts {
     display: none; position: absolute; inset: clamp(96px, 20svh, 190px) 0 auto auto; margin: 0;
