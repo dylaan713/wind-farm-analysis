@@ -63,7 +63,7 @@ no key or account. Re-check before relying on any of this after a long gap.
 ## Licences and credits
 
 Read on 2026-11-15 from each source's own pages, except where marked. This is a plain reading of
-the published terms, not legal advice. All four cost nothing.
+the published terms, not legal advice. All of them cost nothing and need no key or account.
 
 | Source | Terms | What this project must do |
 |---|---|---|
@@ -72,6 +72,7 @@ the published terms, not legal advice. All four cost nothing.
 | Open-Meteo archive | CC BY 4.0. Free tier is for non-commercial use: no subscriptions or advertising; educational content is listed as allowed. Limits: under 10,000 calls a day, 5,000 an hour, 600 a minute. | Show "Weather data by Open-Meteo.com", linked, **next to where the data is displayed**, link the licence, and say the data was changed. Keep the site free of ads and paid features. |
 | ERA5 (the data behind Open-Meteo) | CC BY 4.0 since 2 July 2025 (ECMWF announcement; found by search, not on a Copernicus licence page). | Credit "Generated using Copernicus Climate Change Service information [year]" and cite Hersbach et al. (2023), DOI `10.24381/cds.adbb2d47`. Confirm the wording on the dataset's own References section before launch. |
 | SAM turbine library | BSD 3-Clause. | Keep the copyright notice and licence with the copied row (`data/turbines/NOTICE.md`). Do not suggest the lab endorses this project. |
+| Open Energy Platform turbine library | Open Database License 1.0, © Reiner Lemoine Institut (from the table's own metadata). Sharing or adapting the database itself must carry the same licence; a result worked out from it needs only a notice. | Never commit its rows. Where the 0.78 thrust efficiency is published, say: "Contains information from the Open Energy Platform wind turbine library, © Reiner Lemoine Institut, made available under the Open Database License (ODbL) 1.0." |
 
 - **Raw downloads are never committed** (`data/raw/` is git-ignored), so the repo redistributes only
   the one turbine row and small result files worked out from the data.

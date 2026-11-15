@@ -69,8 +69,9 @@ Two public sources, both checked for these models on 2026-11-14:
 - **Open Energy Platform turbine library:** `Vestas V126/3450`, `V117/3300` and others, with thrust.
   Each row names its own source.
 
-**Not yet done:** the Open Energy Platform library's licence terms have not been read. It is not
-used for the chosen farm, so nothing depends on it.
+The Open Energy Platform library is under the Open Database License 1.0 (read from its own
+metadata on 2026-11-15). None of its rows are in this repo; it is used only to check the thrust
+method, and is credited in `docs/data-sources.md`.
 
 ## The chosen turbine's curve, checked on 2026-11-15
 
@@ -104,10 +105,13 @@ used for the chosen farm, so nothing depends on it.
   Hours that windy are rare, and how many there are at this farm is not yet measured.
 - **Peak efficiency** of the curve is 0.455 near 7.5 m/s, under the 0.593 physical limit. A test
   holds that.
-- **Thrust is derived**, not published: 0.54 at 8 m/s. Published thrust curves for turbines of this
-  size are typically higher below rated speed, because the derivation treats the electrical output
-  as all the energy the rotor took from the wind. This would make modelled wake losses too small.
-  **Open for Task 4:** keep the plan's derivation and say so, or correct for drivetrain losses.
+- **Thrust is derived**, not published. Plain momentum theory gave 0.54 at 8 m/s, which is too
+  low: on 36 turbines that publish both curves it averages 0.53 between 5 and 9 m/s where the
+  published figure is 0.79. The model now divides by a rotor-to-grid efficiency of 0.78, fitted on
+  24 turbines from other makers and tested on 12 Vestas turbines (mean absolute error 0.056,
+  against 0.185 uncorrected). The chosen turbine's thrust at 8 m/s is now 0.81. It is still too
+  low in light wind (about 0.3 low at 4 m/s). Details in the energy plan under "Thrust";
+  `uv run python -m energy.thrust_check` repeats the measurement.
 
 ## To reproduce
 

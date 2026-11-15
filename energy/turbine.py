@@ -16,6 +16,10 @@ GAS_CONSTANT = 287.05        # dry air, J/(kg K)
 STANDARD_DENSITY = 1.225     # kg/m3, the density power curves are published at
 BETZ = 16 / 27               # the most power any rotor can take from the wind
 CT_MAX = 0.9
+# Share of an ideal rotor's power that reaches the grid. Momentum theory alone treats electrical
+# output as everything the rotor took from the wind, and gives thrust about a third too low.
+# 0.78 is fitted to turbines that publish both curves: `uv run python -m energy.thrust_check`.
+ROTOR_TO_GRID = 0.78
 
 
 @dataclass(frozen=True)
@@ -109,6 +113,19 @@ def ct_from_cp(cp: float) -> float:
     return float(_ct_from_cp(np.asarray(cp, dtype=float)))
 
 
+def ct_from_power(kw, v, rotor_diameter_m: float, efficiency: float = ROTOR_TO_GRID) -> np.ndarray:
+    """Thrust derived from electrical power. The power an ideal rotor would have had to take from
+    the wind is the electrical power divided by `efficiency`; momentum theory gives the thrust
+    that goes with it. 0 where there is no power or no wind."""
+    power_w = np.asarray(kw, dtype=float) * 1000.0
+    speeds = np.asarray(v, dtype=float)
+    swept = np.pi * (rotor_diameter_m / 2) ** 2
+    live = (power_w > 0) & (speeds > 0)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        cp = np.where(live, power_w / (0.5 * STANDARD_DENSITY * swept * speeds**3), 0.0)
+    return np.where(live, _ct_from_cp(cp / efficiency), 0.0)
+
+
 def thrust_coefficient(t: Turbine, v):
     """Ct at speed v: the published curve if the turbine has one, otherwise derived from the
     power curve. 0 whenever the turbine is not running."""
@@ -116,9 +133,4 @@ def thrust_coefficient(t: Turbine, v):
     if t.curve_ct is not None:
         ct = np.where(_running(t, speeds), np.interp(speeds, t.curve_v, t.curve_ct), 0.0)
         return _same_shape(ct, v)
-    power_w = np.asarray(power_kw(t, speeds), dtype=float) * 1000.0
-    swept = np.pi * (t.rotor_diameter_m / 2) ** 2
-    with np.errstate(divide="ignore", invalid="ignore"):
-        cp = np.where(power_w > 0, power_w / (0.5 * STANDARD_DENSITY * swept * speeds**3), 0.0)
-    ct = np.where(power_w > 0, _ct_from_cp(cp), 0.0)
-    return _same_shape(ct, v)
+    return _same_shape(ct_from_power(power_kw(t, speeds), speeds, t.rotor_diameter_m), v)

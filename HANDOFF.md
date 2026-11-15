@@ -1,5 +1,9 @@
 # Handoff
 
+## State update (2026-11-15, thrust correction)
+- **Done:** on branch `energy/turbine` (on top of `energy/setup`, pushed, pull request open). The plan's thrust method was measured against 36 turbines with published thrust curves and found about a third low; the model now divides by a rotor-to-grid efficiency of 0.78, fitted on 24 turbines and tested on 12 held-out Vestas ones (`energy/thrust_check.py`, plan updated under "Thrust"). The chosen turbine's thrust at 8 m/s went from 0.54 to 0.81. `uv run pytest energy`: 57 passed.
+- **Next:** the finance partner reviews the pull request for `energy/turbine` (it sits on top of #8, so #8 merges first). Then energy plan Task 4, geometry and the wake. Still open: both display names in `site/src/content/site.ts`; the turbine database's acknowledgment wording, to copy in a browser; data credits on the site before launch.
+
 ## State update (2026-11-15, farm chosen, energy task 3)
 - **Done:** Dylan chose **Black Oak Getty, MN**. No due date: steady work. Licences read for all four data sources and the turbine library, recorded in `docs/data-sources.md`. Single-turbine model built (`energy/turbine.py`) with the farm's power curve transcribed and its licence notice kept (`data/turbines/`). `uv run pytest energy`: 50 passed. **Not committed yet.**
 - **Next:** Dylan decides where this is committed (pull request #8 or a new branch on top of it). Then energy plan Task 4, geometry and the wake, after settling the thrust question in `docs/farm-selection.md` (derived thrust is likely too low). Still open: both display names in `site/src/content/site.ts`; the turbine database's acknowledgment wording, to copy in a browser; data credits on the site before launch.

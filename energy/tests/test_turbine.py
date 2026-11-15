@@ -5,8 +5,8 @@ import numpy as np
 import pytest
 
 from energy.turbine import (
-    Turbine, air_density, ct_from_cp, equivalent_speed, hub_speed, load_turbine, power_kw,
-    thrust_coefficient,
+    ROTOR_TO_GRID, Turbine, air_density, ct_from_cp, ct_from_power, equivalent_speed, hub_speed,
+    load_turbine, power_kw, thrust_coefficient,
 )
 
 T = Turbine(
@@ -83,10 +83,27 @@ def test_thrust_is_zero_when_not_running():
 
 
 def test_thrust_is_derived_from_the_power_curve():
-    # at 8 m/s the test turbine makes 800 kW: Cp = 800000 / (0.5 × 1.225 × pi × 40² × 8³)
+    # at 8 m/s the test turbine makes 800 kW: Cp = 800000 / (0.5 × 1.225 × pi × 40² × 8³) = 0.5076.
+    # The rotor is taken to have captured that divided by 0.78, which is over the Betz limit, so
+    # the thrust is the Betz value.
     cp = 800_000.0 / (0.5 * 1.225 * np.pi * 40.0**2 * 8.0**3)
-    assert thrust_coefficient(T, 8.0) == pytest.approx(ct_from_cp(cp))
+    assert ROTOR_TO_GRID == 0.78
+    assert thrust_coefficient(T, 8.0) == pytest.approx(ct_from_cp(cp / 0.78))
+    assert thrust_coefficient(T, 8.0) == pytest.approx(0.888889, abs=1e-5)
     assert thrust_coefficient(T, np.array([2.0, 8.0, 26.0])).shape == (3,)
+
+
+def test_ct_from_power_divides_by_the_rotor_to_grid_efficiency():
+    # 300 kW at 6 m/s on an 80 m rotor: Cp = 0.4511; / 0.78 = 0.5783
+    cp = 300_000.0 / (0.5 * 1.225 * np.pi * 40.0**2 * 6.0**3)
+    ct = ct_from_power(np.array([300.0]), np.array([6.0]), 80.0)
+    assert ct[0] == pytest.approx(ct_from_cp(cp / 0.78))
+    assert ct[0] > ct_from_cp(cp)                       # more thrust than the uncorrected figure
+    assert ct_from_power(np.array([300.0]), np.array([6.0]), 80.0, efficiency=1.0)[0] == pytest.approx(ct_from_cp(cp))
+
+
+def test_ct_from_power_is_zero_without_power_or_wind():
+    assert ct_from_power(np.array([0.0, 100.0]), np.array([8.0, 0.0]), 80.0).tolist() == [0.0, 0.0]
 
 
 def test_a_published_thrust_curve_is_used_when_there_is_one():
@@ -164,3 +181,5 @@ def test_the_real_curve_stays_under_the_betz_limit():
     assert cp.max() == pytest.approx(0.455, abs=0.01)     # peak efficiency, near 7.5 m/s
     ct = thrust_coefficient(t, v)
     assert ct.min() > 0.0 and ct.max() < 0.9
+    # Cp 0.453 / 0.78 = 0.581 -> a = 0.28 -> Ct = 4 × 0.28 × 0.72 = 0.806. Uncorrected it was 0.54.
+    assert thrust_coefficient(t, 8.0) == pytest.approx(0.806, abs=0.005)
