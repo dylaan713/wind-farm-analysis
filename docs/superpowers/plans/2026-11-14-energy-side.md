@@ -36,8 +36,9 @@ Conditions the spec does not spell out but real data will produce. Each has a te
 2. **Months where the farm reported zero or negative generation** (outage, curtailment, metering). Flagged and excluded with the reason; the count of excluded months is published. (Task 6)
 3. **Wind direction at the 0°/360° wrap, and wind exactly along a row of turbines.** Direction bins wrap correctly; 359.9° and 0.1° give the same answer. (Tasks 4, 5)
 4. **Wind speed outside the power curve:** below cut-in and at or above cut-out give 0, never an extrapolated or negative value. (Task 3)
-5. **A farm whose turbine count changed during the study years.** Selection rejects it; a check compares turbine count × rating with the reported capacity. (Task 2)
-6. **A download that fails or is cut off.** Downloaders write to a temp name and rename on success, reuse the cache on the next run, and raise an error that names the URL. (Task 1)
+5. **A farm that reports to the government once a year.** Its twelve monthly figures are the agency's estimate, not measurements. Selection rejects it, and validation refuses to run on it. (Tasks 1, 2, 6)
+6. **A farm whose turbine count changed during the study years.** Selection rejects it; a check compares turbine count × rating with the reported capacity. (Task 2)
+7. **A download that fails or is cut off.** Downloaders write to a temp name and rename on success, reuse the cache on the next run, and raise an error that names the URL. (Task 1)
 
 ## The model, exactly
 
@@ -179,7 +180,8 @@ def fetch(url: str, dest: Path, *, params: dict | None = None) -> Path      # ca
 def turbines(force: bool = False) -> pd.DataFrame
     # columns: eia_id, p_name, t_state, p_year, t_manu, t_model, t_cap (kW), t_hh (m), t_rd (m), xlong, ylat
 def generation(plant_id: int, years: list[int]) -> pd.DataFrame
-    # columns: month (pandas Period, monthly), net_mwh (float)
+    # columns: month (pandas Period, monthly), net_mwh (float), reported_monthly (bool)
+    # reported_monthly is False when the plant filed one yearly total and the agency spread it over the months
 def wind(lat: float, lon: float, start_year: int, end_year: int) -> pd.DataFrame
     # index: UTC hourly DatetimeIndex; columns: speed_100m (m/s), dir_100m (deg from), temp_k, pressure_pa
 def parse_turbines(path: Path) -> pd.DataFrame
@@ -190,6 +192,7 @@ def parse_wind(payload: dict) -> pd.DataFrame
 **Sources to confirm in Step 1 (do not trust these from memory):**
 - US Wind Turbine Database, USGS: the CSV download of all turbines.
 - EIA Form 923: one zip per year; the generation-and-fuel sheet has one row per plant and fuel with twelve monthly net-generation columns. Wind rows have fuel code `WND`.
+- **How EIA Form 923 marks monthly against annual reporters.** Many smaller plants file one yearly total and the agency estimates the twelve months. The file is believed to carry a respondent-frequency column (annual or monthly) for each plant; find it in the form's own documentation, record the column name and its codes, and if no such marker exists, stop and ask, because monthly validation depends on it.
 - Open-Meteo historical archive: hourly `wind_speed_100m`, `wind_direction_100m`, `temperature_2m`, `surface_pressure`, with wind in m/s and times in UTC, one request per year.
 
 - [ ] **Step 1:** Open each source's own documentation and write the exact URLs, sheet name, header row and column names as constants at the top of `download.py`, with the date checked. If any source needs a key or account, stop and ask.
@@ -202,6 +205,9 @@ def test_parse_turbines_has_the_columns_and_types(): ...
 
 def test_parse_generation_returns_twelve_months_for_a_wind_plant(): ...
     # 12 rows, month 2023-01..2023-12, net_mwh floats; a plant with no WND row raises ValueError naming the plant id
+
+def test_parse_generation_flags_annual_reporters(): ...
+    # the sample sheet has one monthly and one annual reporter: reported_monthly is all True for the first, all False for the second
 
 def test_parse_generation_keeps_zero_and_negative_months(): ...
     # values are returned as reported; excluding them is validate.py's job
@@ -216,9 +222,9 @@ def test_fetch_is_atomic_and_names_the_url_on_failure(tmp_path, monkeypatch): ..
     # a failed request raises RuntimeError containing the URL and leaves no file at dest
 ```
 
-- [ ] **Step 4:** Run `uv run pytest energy/tests/test_download.py -v`. Expected: 6 failures, module not found.
+- [ ] **Step 4:** Run `uv run pytest energy/tests/test_download.py -v`. Expected: 7 failures, module not found.
 - [ ] **Step 5:** Implement `download.py`. `fetch` writes to `dest.with_suffix(dest.suffix + ".part")` and renames; sends `User-Agent: wind-farm-study`; 60-second timeout. `wind` requests one year at a time and concatenates.
-- [ ] **Step 6:** Run the tests. Expected: 6 passed.
+- [ ] **Step 6:** Run the tests. Expected: 7 passed.
 - [ ] **Step 7:** Prove live access once, by hand: `uv run python -c "from energy import download as d; print(len(d.turbines())); print(d.wind(41.0,-95.0,2023,2023).describe())"`. Expected: more than 70,000 turbines; 8,760 wind rows with mean speed between 5 and 10 m/s.
 - [ ] **Step 8:** Commit (`feat(energy): cached downloaders for turbines, generation and wind`). Pull request.
 
@@ -230,7 +236,7 @@ def test_fetch_is_atomic_and_names_the_url_on_failure(tmp_path, monkeypatch): ..
 - Consumes: `download.turbines`, `download.generation`.
 - Produces: `candidates(turbines: pd.DataFrame) -> pd.DataFrame` with one row per farm: `eia_id, p_name, t_state, p_year, n_turbines, t_model, capacity_mw, hub_height_m, rotor_diameter_m, lat, lon`.
 
-**Criteria, from the spec:** one turbine model across the whole farm; 20 to 150 turbines; every turbine has the same `p_year`, and it is 2019 or earlier (so at least four full years of reports exist); `eia_id`, hub height and rotor diameter present; in a flat state (start with IA, KS, NE, OK, TX, ND, SD, MN, IL, IN).
+**Criteria, from the spec, plus one found later (monthly reporting, Step 3):** one turbine model across the whole farm; 20 to 150 turbines; every turbine has the same `p_year`, and it is 2019 or earlier (so at least four full years of reports exist); `eia_id`, hub height and rotor diameter present; in a flat state (start with IA, KS, NE, OK, TX, ND, SD, MN, IL, IN).
 
 - [ ] **Step 1: Write the failing tests** on a hand-built table:
 
@@ -243,9 +249,9 @@ def test_centroid_is_the_mean_position(): ...
 ```
 
 - [ ] **Step 2:** Run. Expected: failures. Implement `candidates`. Run. Expected: 5 passed.
-- [ ] **Step 3:** For the 15 largest candidates, fetch generation for the years since `p_year + 1`. Drop any farm where reported capacity factor in any full year is below 20% or above 60%, or where turbine count × rating differs from the plant's reported nameplate by more than 5% (the nameplate is in the same EIA file family; confirm the column in Step 1 of Task 1).
+- [ ] **Step 3:** For the 15 largest candidates, fetch generation for the years since `p_year + 1`. **Drop any farm that was not a monthly reporter in every one of those years** (`reported_monthly` False in any month): its monthly figures would be estimates. Then drop any farm where reported capacity factor in any full year is below 20% or above 60%, or where turbine count × rating differs from the plant's reported nameplate by more than 5% (the nameplate is in the same EIA file family; confirm the column in Step 1 of Task 1).
 - [ ] **Step 4:** Check that the turbine model of each survivor has a published power curve you can cite. Good open sources: the manufacturer's own brochure; the Open Energy Platform turbine library. Drop farms without one.
-- [ ] **Step 5:** Write `docs/farm-selection.md`: the criteria, a table of the top five survivors (name, state, turbines, model, capacity, years of data, capacity factor range, power-curve source), and a recommendation with one paragraph of reasoning.
+- [ ] **Step 5:** Write `docs/farm-selection.md`: the criteria, a table of the top five survivors (name, state, turbines, model, capacity, years of data, **confirmed monthly reporter in every year**, capacity factor range, power-curve source), the number of candidates dropped for annual reporting, and a recommendation with one paragraph of reasoning.
 - [ ] **Step 6:** Commit, open a pull request, and **stop. Dylan picks the farm.** Record his choice at the top of the memo.
 
 ### Task 3: One turbine
@@ -412,8 +418,10 @@ class Validation:
     table: pd.DataFrame                    # month, modelled_mwh, reported_mwh, used_for ("calibration" | "holdout" | "excluded")
 
 def usable_months(modelled: pd.Series, reported: pd.Series, coverage: pd.Series) -> tuple[pd.Index, list[dict]]
-def validate(modelled: pd.Series, reported: pd.Series, coverage: pd.Series, holdout_year: int) -> Validation
+def validate(modelled: pd.Series, reported: pd.Series, coverage: pd.Series, holdout_year: int, reported_monthly: pd.Series) -> Validation
 ```
+
+`validate` first checks the `reported_monthly` flag and raises `ValueError` if any month in the study years is from an annual filing; such a farm should never have reached this step.
 
 Exclusion rules, in this order, each with its reason text: wind coverage below 0.98 ("wind data missing"); reported generation ≤ 0 ("reported zero or negative"); reported generation above nameplate × hours ("reported above nameplate"). Nothing else is ever excluded.
 
@@ -434,13 +442,14 @@ def test_zero_month_is_excluded_with_reason():
 def test_low_coverage_month_is_excluded_with_reason():
 def test_above_nameplate_month_is_excluded_with_reason():   # needs nameplate_mw argument; add it to both functions
 def test_excluded_months_are_in_the_table_and_marked():
+def test_annual_reporter_is_refused():                      # any reported_monthly False -> ValueError naming the first such month
 def test_holdout_needs_at_least_ten_usable_months():        # otherwise ValueError
 def test_calibration_needs_at_least_two_years():            # otherwise ValueError
 ```
 
 Add `nameplate_mw: float` to `usable_months` and `validate` as the test requires.
 
-- [ ] **Step 2:** Run. Expected: failures. Implement, with `ASSUMED_LOSSES` as a module constant built from the four named parts. Run. Expected: 13 passed.
+- [ ] **Step 2:** Run. Expected: failures. Implement, with `ASSUMED_LOSSES` as a module constant built from the four named parts. Run. Expected: 14 passed.
 - [ ] **Step 3:** Before running the real farm, find a citable source for typical wind-farm loss percentages, adjust the four parts of `ASSUMED_LOSSES` to it if needed (update the test value to match), and commit that **first, in its own commit**, so the history shows the assumption was fixed before the farm's output was seen.
 - [ ] **Step 3b:** Run the real farm: download wind and generation, build the table, validate. Write the blind error, the calibration factor, the three held-out numbers and the excluded months into the pull request description **exactly as they come out**.
 - [ ] **Step 4:** If the blind error is above 25% or the held-out annual error is above 15%, do not adjust anything yet. Check, in order: the farm's coordinates and turbine count; the direction convention (a model that is right in total but wrong by season often has it reversed); units; the power curve transcription. Fix what is actually wrong, re-run, and record what was found. If nothing is wrong, the error stands and gets published.
