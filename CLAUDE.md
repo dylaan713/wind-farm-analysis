@@ -22,7 +22,7 @@ Status 2026-11-14: the site's first screen is built (`site/`), the finance contr
 ## Definition of done for site changes
 All six pass, and the output is shown: `check` 0 errors · `test` · `build` · `e2e` · `budget` (first
 screen 60 KB gzipped JavaScript, whole site 150 KB) · `lighthouse` (mobile performance 90,
-accessibility 95). Measured 2026-11-14 on `site/polish`: check 0 errors; test 71 passed; e2e 73
+accessibility 95). Measured 2026-11-14 on `site/polish`: check 0 errors; test 74 passed; e2e 73
 passed, 9 skipped (single-layout tests); budget 5.9 KB; Lighthouse mobile 100 / 100.
 
 ## Site rules
