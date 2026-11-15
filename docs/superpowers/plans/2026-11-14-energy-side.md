@@ -4,7 +4,7 @@
 
 **Goal:** Predict a real US wind farm's energy output from public wind data, check the prediction against the farm's reported generation, quantify the uncertainty, and hand the results to the finance model and the site.
 
-**Architecture:** A Python package in `energy/` downloads public data into a git-ignored cache, models one turbine, then the whole farm with a hand-written Jensen wake model, calibrates one loss factor on some years and tests it on a held-out year, and runs a Monte Carlo for P-values. It writes small JSON result files to `data/results/`. A small TypeScript version of the turbine and wake math in `core/src/energy/` is tested against fixtures the Python writes, so the site can run it live.
+**Architecture:** A Python package in `energy/` downloads public data into a git-ignored cache, models one turbine, then the whole farm with a hand-written Jensen wake model, reports a blind prediction with losses assumed in advance, then calibrates one factor on earlier years and tests it on a held-out year, and runs a Monte Carlo for P-values. It writes small JSON result files to `data/results/`. A small TypeScript version of the turbine and wake math in `core/src/energy/` is tested against fixtures the Python writes, so the site can run it live.
 
 **Tech Stack:** Python 3.12+ with `uv`, `numpy`, `pandas`, `openpyxl`, `requests`, `pytest` · Node 22.12+, TypeScript, `vitest` (already set up in `core/`). All free; no API keys.
 
@@ -17,6 +17,7 @@
 - Tests never touch the network. They use small sample files in `energy/tests/samples/`.
 - The wake model and the turbine model are written by hand. Do not install PyWake, windpowerlib, floris or similar.
 - The validation error is published as measured. Never tune on the held-out year, never drop a month without listing it and the reason.
+- **Say what the test is.** The wording everywhere (site, README, notes, resumes) is: "calibrated on the farm's earlier years, tested on a held-out year". Never "predicted the farm's output within X%" for the calibrated result. The blind result is the only one that may be called a prediction, and it is published beside the calibrated one even if it is much worse.
 - Work on a branch, push it, open a pull request and stop. **Dylan does all merging.** Never merge, and never commit or push to `main`.
 - Commit with a GitHub noreply email. The repo will be public.
 - Nothing ships that Dylan cannot explain out loud without notes.
@@ -75,14 +76,29 @@ effect           = d × f
 
 **Calibration and validation.**
 ```
-loss_factor = sum(reported net MWh) / sum(modelled waked MWh)     over calibration months only
-net(month)  = modelled waked(month) × loss_factor
+Two results are produced and both are published.
+
+A. Blind prediction: no number is taken from the farm's own output.
+   assumed_losses     = 1 − (1−0.03)(1−0.02)(1−0.02)(1−0.02)      = 0.0870
+                        availability 3%, electrical 2%, turbine performance 2%, environmental 2%
+                        (typical published values; cite the source in Task 6; fixed BEFORE looking at the farm's output)
+   blind(month)       = modelled waked(month) × (1 − assumed_losses)
+   blind_error        = (sum blind − sum reported) / sum reported      over ALL usable months
+
+B. Calibrated on earlier years, tested on a held-out year.
+   calibration_factor = sum(reported net MWh) / sum(modelled waked MWh)     over calibration months only
+   net(month)         = modelled waked(month) × calibration_factor
+
+The calibration factor is NOT a loss figure. It absorbs every reason the model runs high or low on
+average: real losses (downtime, electrical, curtailment) and also any bias in the wind data, the
+shear exponent and the power curve. It can be far from 0.9 and can exceed 1. Never present
+(1 − calibration_factor) as "losses".
 ```
-Report on the held-out year only: annual error %, monthly mean absolute % error, R² of monthly values. The held-out year is the most recent full year. All earlier usable years are calibration.
+For B, report on the held-out year only: annual error %, monthly mean absolute % error, R² of monthly values. That test shows how well the model tracks year-to-year and month-to-month changes at this farm once its average level is set. It does not show a from-scratch prediction of total output; result A does. The held-out year is the most recent full year. All earlier usable years are calibration.
 
 **Uncertainty.**
 ```
-long-term series  = model run on every full year from 2000 with today's layout and loss_factor
+long-term series  = model run on every full year from 2000 with today's layout and calibration_factor
 P50               = mean of that series
 sigma_iav         = standard deviation of yearly totals / P50          (year-to-year wind)
 sigma_model       = max(0.03, |held-out annual error|)                 (floor of 3%)
@@ -105,7 +121,9 @@ P75, P90, P99     = the 25th, 10th and 1st percentiles of the draws
   "energy_mwh":      { "p50": 0, "p75": 0, "p90": 0, "p99": 0 },
   "energy_mwh_10yr": { "p50": 0, "p75": 0, "p90": 0, "p99": 0 },
   "monthly_shape": [0,0,0,0,0,0,0,0,0,0,0,0],
-  "losses": { "wake_pct": 0, "other_pct": 0 },
+  "wake_loss_pct": 0,
+  "blind": { "assumed_losses_pct": 8.7, "error_pct": 0, "months_used": 0 },
+  "calibration": { "factor": 0, "note": "absorbs real losses and model and wind-data bias; not a loss figure" },
   "uncertainty": { "sigma_iav": 0, "sigma_model": 0 },
   "validation": { "calibration_years": [], "holdout_year": 0, "annual_error_pct": 0,
                   "monthly_mape_pct": 0, "r2": 0, "excluded_months": [] },
@@ -113,7 +131,7 @@ P75, P90, P99     = the 25th, 10th and 1st percentiles of the draws
 }
 ```
 
-`monthly_shape` sums to 1. `other_pct` is `(1 − loss_factor) × 100`. `excluded_months` entries are `{ "month": "2021-02", "reason": "…" }`. The finance workbook's `energy_p50_mwh`, `energy_p90_mwh`, `energy_p99_mwh` and `capacity_mw` come from the 1-year block and `farm`.
+`monthly_shape` sums to 1. `blind.error_pct` is positive when the model is above the reported total. `excluded_months` entries are `{ "month": "2021-02", "reason": "…" }`. The finance workbook's `energy_p50_mwh`, `energy_p90_mwh`, `energy_p99_mwh` and `capacity_mw` come from the 1-year block and `farm`.
 
 ## File map
 
@@ -387,7 +405,8 @@ def test_monthly_mwh_units():                    # 1000 kW for 744 hours -> 744.
 ```python
 @dataclass(frozen=True)
 class Validation:
-    loss_factor: float; calibration_years: list[int]; holdout_year: int
+    calibration_factor: float; calibration_years: list[int]; holdout_year: int
+    blind_error_pct: float; blind_months: int; assumed_losses: float
     annual_error_pct: float; monthly_mape_pct: float; r2: float
     excluded_months: list[dict]            # {"month": "2021-02", "reason": "..."}
     table: pd.DataFrame                    # month, modelled_mwh, reported_mwh, used_for ("calibration" | "holdout" | "excluded")
@@ -401,10 +420,16 @@ Exclusion rules, in this order, each with its reason text: wind coverage below 0
 - [ ] **Step 1: Write the failing tests** on synthetic series:
 
 ```python
-def test_loss_factor_is_recovered():        # reported = 0.85 × modelled exactly -> loss_factor == 0.85, holdout error == 0
+def test_calibration_factor_is_recovered(): # reported = 0.85 × modelled exactly -> calibration_factor == 0.85, holdout error == 0
 def test_holdout_is_not_used_for_calibration():
-    # holdout year reported = 0.70 × modelled, others 0.85 -> loss_factor stays 0.85, annual_error_pct == pytest.approx(21.43, abs=0.01)
+    # holdout year reported = 0.70 × modelled, others 0.85 -> calibration_factor stays 0.85, annual_error_pct == pytest.approx(21.43, abs=0.01)
 def test_error_sign():                      # model above reported gives a positive error
+def test_assumed_losses_value():            assert ASSUMED_LOSSES == pytest.approx(0.087044, abs=1e-6)
+def test_blind_error_uses_no_farm_output_for_tuning():
+    # reported = 0.85 × modelled in every month -> blind_error_pct == pytest.approx(7.407, abs=0.01)   ((1−0.087044)/0.85 − 1)
+    # and it is the same whichever year is held out
+def test_blind_error_covers_all_usable_months():   # blind_months == calibration months + holdout months
+def test_calibration_factor_may_exceed_one(): # reported = 1.10 × modelled -> factor == 1.10, no error raised
 def test_zero_month_is_excluded_with_reason():
 def test_low_coverage_month_is_excluded_with_reason():
 def test_above_nameplate_month_is_excluded_with_reason():   # needs nameplate_mw argument; add it to both functions
@@ -415,9 +440,10 @@ def test_calibration_needs_at_least_two_years():            # otherwise ValueErr
 
 Add `nameplate_mw: float` to `usable_months` and `validate` as the test requires.
 
-- [ ] **Step 2:** Run. Expected: failures. Implement. Run. Expected: 9 passed.
-- [ ] **Step 3:** Run the real farm: download wind and generation, build the table, validate. Write the three numbers and the excluded months into the pull request description **exactly as they come out**.
-- [ ] **Step 4:** If the held-out annual error is above 15%, do not adjust anything yet. Check, in order: the farm's coordinates and turbine count; the direction convention (a model that is right in total but wrong by season often has it reversed); units; the power curve transcription. Fix what is actually wrong, re-run, and record what was found. If nothing is wrong, the error stands and gets published.
+- [ ] **Step 2:** Run. Expected: failures. Implement, with `ASSUMED_LOSSES` as a module constant built from the four named parts. Run. Expected: 13 passed.
+- [ ] **Step 3:** Before running the real farm, find a citable source for typical wind-farm loss percentages, adjust the four parts of `ASSUMED_LOSSES` to it if needed (update the test value to match), and commit that **first, in its own commit**, so the history shows the assumption was fixed before the farm's output was seen.
+- [ ] **Step 3b:** Run the real farm: download wind and generation, build the table, validate. Write the blind error, the calibration factor, the three held-out numbers and the excluded months into the pull request description **exactly as they come out**.
+- [ ] **Step 4:** If the blind error is above 25% or the held-out annual error is above 15%, do not adjust anything yet. Check, in order: the farm's coordinates and turbine count; the direction convention (a model that is right in total but wrong by season often has it reversed); units; the power curve transcription. Fix what is actually wrong, re-run, and record what was found. If nothing is wrong, the error stands and gets published.
 - [ ] **Step 5:** Commit (`feat(energy): calibration and held-out validation`). Pull request.
 
 ### Task 7: Uncertainty and the result files
@@ -483,7 +509,7 @@ export function overlapFraction(r0: number, rw: number, acrossM: number): number
 export function combine(effects: number[]): number;
 export function turbineSpeeds(t: TurbineSpec, layout: Point[], windFromDeg: number, v: number, k?: number): number[];
 export function farmPowerKw(t: TurbineSpec, layout: Point[], windFromDeg: number, v: number, k?: number): number;
-export function annualEnergyMwh(t: TurbineSpec, layout: Point[], rose: { dir_step: number; speed_step: number; freq: number[][] }, lossFactor: number): number;
+export function annualEnergyMwh(t: TurbineSpec, layout: Point[], rose: { dir_step: number; speed_step: number; freq: number[][] }, calibrationFactor: number): number;
 ```
 
 - [ ] **Step 1: Write the failing tests.** Repeat the known-value tests from Tasks 3 and 4 in TypeScript with the same numbers (`powerKw` at 10 m/s is 1400; `ctFromCp(0.512)` is 0.64; `deficit(0.8, 400, 40)` is 0.180502; `overlapFraction(40, 40, 40)` is 0.391002; `overlapFraction(40, 70, 60)` is 0.595167; `combine([0.18, 0.10])` is 0.205913), then the match test:
@@ -499,7 +525,7 @@ test.each(cases.farm)('farm at $wind_from_deg° and $v m/s', c => {
   expect(Math.abs(got - c.farm_power_kw)).toBeLessThanOrEqual(0.005 * Math.max(1, c.farm_power_kw));
 });
 test('annual energy from the wind rose is within 2% of the hourly model', () => {
-  // rose from data/results/wind-rose.json, loss factor and p50 from energy-contract.json
+  // rose from data/results/wind-rose.json, calibration factor and p50 from energy-contract.json
 });
 test('dragging a turbine far away removes its wake loss', () => {
   // move one turbine 50 km crosswind: farm power rises or stays equal at every case direction
@@ -515,7 +541,7 @@ test('dragging a turbine far away removes its wake loss', () => {
 
 **Files:** Create `docs/notes/energy.md`; add an "Energy" section to `README.md`
 
-- [ ] **Step 1:** In your own words, one short section each: why wind is scaled to hub height and what the exponent means; why air density changes output; what a power curve is and where this one came from; how the Jensen wake works and what `k` controls; how thrust was obtained; why losses were set on some years and tested on another; what P50, P90 and P99 mean and what the two uncertainty terms are; every simplification and how a professional energy assessment differs.
+- [ ] **Step 1:** In your own words, one short section each: why wind is scaled to hub height and what the exponent means; why air density changes output; what a power curve is and where this one came from; how the Jensen wake works and what `k` controls; how thrust was obtained; the difference between the blind prediction and the calibrated result, what the calibration factor absorbs, and why it was set on some years and tested on another; what P50, P90 and P99 mean and what the two uncertainty terms are; every simplification and how a professional energy assessment differs.
 - [ ] **Step 2:** Have the finance partner ask five questions with the notes closed. Anything you cannot answer goes back into the notes or comes out of the site.
 - [ ] **Step 3:** README section: the data sources with attribution (including "Weather data by Open-Meteo.com", CC BY 4.0), the one command to run, how to run the tests.
 - [ ] **Step 4:** Commit (`docs(energy): study notes and README section`). Pull request.

@@ -3,8 +3,9 @@
 Date: 2026-11-14 · Status: **direction and outline approved by Dylan 2026-11-14; this written
 design awaits his read-through** · Parent: `2026-11-14-wind-farm-design.md` (section 8)
 
-Reference mockup, live and interactive: `docs/design/first-screen-mockup.html` (open it in a
-browser). It shows the idea and the palette, not final type, spacing or copy.
+Reference mockup, live and interactive: **`docs/design/first-screen-mockup-colour.html`** (open it
+in a browser). It shows the idea, the palette and the reactions, not final type, spacing or copy.
+The earlier grey-and-orange version is kept beside it as `first-screen-mockup.html`.
 
 ## What Dylan decided
 
@@ -13,6 +14,8 @@ browser). It shows the idea and the palette, not final type, spacing or copy.
 - First screen: idea A in its landscape form — a sky of moving air the visitor pushes, a low sun,
   hills, three turbines, a live energy meter, chapters that fill as energy is made. He tried a
   more abstract version and came back to the landscape.
+- **Lean into colour theory, be more creative, reactivity matters** (2026-11-14). He approved the
+  blue-and-orange mockup that followed.
 - The rest-of-page outline below. Working name "wind-farm" and headline "Made of moving air." are
   fine for now.
 - Dylan builds most of the site. No AI log.
@@ -31,37 +34,57 @@ energy.*
 
 ## 2. Palette as roles
 
+**The scheme is a complementary pair: blue and orange, opposite each other on the colour wheel**
+(approved by Dylan from the second mockup, 2026-11-14). Three rules follow from that choice.
+
+- **Blue is air, orange is energy.** Wind arrives blue. Passing through a rotor it turns orange and
+  slows, because the turbine took its energy, then fades back to blue. The colour change is the
+  physics, and it is the same wake the farm model calculates.
+- **Warm light, cool shadows.** The sun is the only warm thing on the page. Sky, far hill and cast
+  shadows lean blue. Opposites side by side make each other look stronger, so the page reads
+  brighter without any dark area.
+- **One scale for every chart:** blue through white to orange. It shows wake loss, and where the
+  model ran under or over the real farm. It passes through white and darkens toward both ends, so
+  it still reads without colour vision.
+
 | Role | Token | Hex | Its one job |
 |---|---|---|---|
-| Ground | `--ground` | `#FFFFFF` | The sky and the page. Most of every screen |
-| Ink | `--ink` | `#0C1014` | Text, the near turbine, the ground line |
-| Surface | `--surface` | `#F1F5F9` | The far hill; panels behind tools |
-| Signal | `--signal` | `#FF5B14` | **Energy.** The sun, captured wind, wakes, the meter, filled chapters. Nothing else |
-| Third | `--third` | `#667080` | Secondary text and labels; a cool grey that keeps white from going flat |
-| Signal, text weight | `--signal-deep` | `#C2410C` | Orange for small text only, where the signal fails contrast |
+| Ground | `--ground` | `#FFFFFF` | The page; most of every screen |
+| Ink | `--ink` | `#0A1220` | Text, the near turbine, the ground line. A blue-black, so it sits with the air colour |
+| Surface | `--surface` | `#E6F1FC` | The far hill; panels behind tools |
+| Air | `--air` | `#1890FF` | **Wind that still has its energy.** Streaks, sky tint, shadows, the cool end of charts |
+| Signal | `--signal` | `#FF5B14` | **Energy.** The sun, captured wind, wakes, the meter, filled chapters, the warm end of charts |
+| Third | `--third` | `#5C6B80` | Secondary text and labels |
+| Text-weight blue | `--air-deep` | `#0B62C4` | Blue for small text and links |
+| Text-weight orange | `--signal-deep` | `#C2410C` | Orange for small text |
 
-Decorative, never text: air streaks `rgb(70 92 120)` at low opacity; far turbines `#8794A5`.
+Far turbines are `#7FA6CC`, decorative only.
 
 Contrast, computed by script on 2026-11-14 (WCAG ratio; 4.5 passes for text, 3 for text 24px and up):
 
-| Text on ground | Ratio | Verdict |
+| Pair | Ratio | Verdict |
 |---|---|---|
-| ink on ground | 19.09 | pass |
-| ink on surface | 17.43 | pass |
-| third on ground | 5.01 | pass |
-| third on surface | 4.57 | pass |
-| ink on signal | 6.14 | pass |
-| signal on ground | 3.11 | **large text only** (headline word, meter number) |
-| ground on signal | 3.11 | **large text only**; prefer ink on signal |
+| ink on ground | 18.75 | pass |
+| ink on surface | 16.38 | pass |
+| third on ground | 5.43 | pass |
+| third on surface | 4.74 | pass |
+| ink on signal | 6.03 | pass |
+| ink on air | 5.78 | pass |
+| air-deep on ground | 5.90 | pass |
+| air-deep on surface | 5.16 | pass |
 | signal-deep on ground | 5.18 | pass |
-| signal-deep on surface | 4.73 | pass |
-| signal on surface | 2.84 | **banned for text** |
-| third on signal | 1.61 | **banned for text** |
+| signal-deep on surface | 4.53 | pass |
+| signal on ground | 3.11 | **large text only** (headline word, meter number) |
+| air on ground | 3.24 | **large text only** |
+| ground on signal, ground on air | 3.11, 3.24 | **large text only**; prefer ink on both |
+| signal on surface | 2.72 | **banned for text** |
+| signal on air | 1.04 | **banned**: the two are almost the same brightness, so orange text or thin orange shapes on solid blue (or the reverse) vanish. They may meet only as moving streaks and as chart ends separated by white |
 
 One file is the source of truth (`site/src/lib/palette.ts`, mirrored in `tokens.css`). A unit test
 computes these pairs and fails if any used pair drops below its threshold or the two files drift.
-Text that sits over the moving air is tested against the flat ground token; the streaks stay pale
-enough that this holds, and any text block that proves hard to read gets a ground-coloured backing.
+Text that sits over the moving air is tested against the flat ground token; the sky tint stays
+under 15% and the streaks stay pale enough that this holds, and any text block that proves hard to
+read gets a ground-coloured backing.
 
 ## 3. Type
 
@@ -85,6 +108,15 @@ follows the pointer.
 - Dragging a finger across the sky pushes the wind. Vertical scrolling still works
   (`touch-action: pan-y`), and **scrolling itself is a gust**: scroll speed pushes the air.
 - Press-down scale on every control. No vibration; every confirmation is visual.
+
+**What answers the wind, everywhere on the page** (all shown in the mockup):
+- The headline leans. Each letter bends in the wind the visitor makes and springs back. Only the
+  visitor's wind moves type; the background breeze never does, so text at rest is still.
+- Press, hold and let go anywhere to charge a gust and send a ring of wind across the screen. A
+  ring fills around the finger while it charges, so the gesture explains itself.
+- Grass on the ridge bends with the air above it.
+- The sun glows brighter the more the farm is making.
+- Air turns from blue to orange through every rotor.
 
 **Fine pointer:** pointer velocity pushes the wind; magnetic pull on the few plain buttons; hover
 states on everything clickable.
@@ -119,7 +151,7 @@ the farm from above, then the money.
 | 01 | The wind | Turn a wind rose of the real site; see where the wind comes from and how often | Mean wind speed |
 | 02 | One turbine | Scrub the real power curve; change height and air density | One turbine's yearly energy |
 | 03 | The farm | Drag turbines on the real layout; orange wakes show losses; turn the wind; reset to the real layout | Farm yearly energy and wake loss |
-| 04 | How sure are we | Modelled against reported, month by month, held-out year marked, error stated as measured; slide between P50, P90, P99 | The held-out error |
+| 04 | How sure are we | Two results side by side: the blind prediction (losses assumed in advance) and the model calibrated on earlier years and tested on a held-out year. Modelled against reported, month by month, held-out year marked; slide between P50, P90, P99 | The blind error, then the held-out error |
 | 05 | The money | Move power price, loan terms and wind case; tax credit on or off; download the workbook | Loan size, then return |
 | 06 | How we built it | Who did what, methods, sources and attributions, disclaimer, link to the code | "While you were here, the real farm made about X" |
 
@@ -183,7 +215,11 @@ small local utilities, and a library is added only if one earns its bytes.
 - Sample figures in the mockup (output, dollars, "phone charges") do not ship. Every number on the
   site comes from `data/results/`, the workbook, or `core/`. An everyday comparison such as phone
   charges ships only with a cited source.
-- Chapter 04 shows the held-out error as measured, and lists every excluded month with its reason.
+- Chapter 04 shows both validation results as measured, and lists every excluded month with its reason.
+- **The wording is fixed:** "calibrated on the farm's earlier years, tested on a held-out year". The
+  site never says the model "predicted the farm within X%" about the calibrated result; only the
+  blind result is called a prediction. The calibration factor is shown as a calibration factor,
+  with one sentence on what it absorbs, and is never labeled "losses".
 - Not investment, tax or engineering advice; stated in chapter 06 and the footer.
 
 ## Ask the owner to check
@@ -194,7 +230,9 @@ These need people, so they are not in the gate.
   wind"?
 - A real phone, inside the LinkedIn app's browser: does scrolling feel right, and is dragging the
   sky discoverable without the hint?
-- Is the orange right on your own screens? `#FF5B14` was picked on a mockup, not on a brand.
+- Are the orange and the blue right on your own screens? `#FF5B14` and `#1890FF` were picked on a
+  mockup, not on a brand.
+- Is press-and-hold discoverable on a phone, and does it ever fight with scrolling or text selection?
 - Does the finance partner's wording for chapter 05 sound like him?
 
 ## Open

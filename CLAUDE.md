@@ -24,7 +24,8 @@ when they do.
 - Only the finance partner edits `finance/model.xlsx`.
 - The repo will be public. Commit with a GitHub noreply email. No secrets; `.env` stays untracked.
 - Nothing is published that its owner cannot explain, and no skill is credited to someone who
-  did not use it. The validation error is published as measured.
+  did not use it. The validation error is published as measured, and described as "calibrated
+  on earlier years, tested on a held-out year" — never as a from-scratch prediction.
 - Educational model: not investment, tax or engineering advice.
 
 ## Capability

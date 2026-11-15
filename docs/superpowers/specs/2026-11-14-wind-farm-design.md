@@ -110,7 +110,10 @@ model.xlsx → Scenarios sheet → fixtures JSON → tests for /core finance cod
 3. **The farm.** Real turbine positions and model from the US Wind Turbine Database (USGS). Wake
    losses with a hand-written Jensen/Park model. Then availability and electrical losses.
 4. **Validation.** Compare modeled monthly net generation with EIA Form 923 for the same months.
-   Loss assumptions are set using some years and **tested on a held-out year**. Publish the error.
+   Two results, both published: a **blind prediction** with losses assumed in advance, and a model
+   with one factor **calibrated on earlier years and tested on a held-out year**. The calibrated
+   test shows tracking of year-to-year and month-to-month change, not a from-scratch prediction;
+   describe it that way everywhere (corrected 2026-11-14).
 5. **Uncertainty.** Monte Carlo over year-to-year wind variability and model error, producing the
    P-values in contract 1.
 6. **Live version in `/core`.** Annual energy from a binned wind rose (speed × direction table) plus
