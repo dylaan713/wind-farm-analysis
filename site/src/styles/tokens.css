@@ -1,0 +1,22 @@
+/* Mirrors src/lib/palette.ts. A unit test fails if the two drift. */
+:root {
+  --ground: #FFFFFF;
+  --ink: #0A1220;
+  --surface: #E6F1FC;
+  --air: #1890FF;
+  --signal: #FF5B14;
+  --third: #5C6B80;
+  --air-deep: #0B62C4;
+  --signal-deep: #C2410C;
+  --far-turbine: #7FA6CC;
+
+  --font-display: 'Mona Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-num: 'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --gutter: 16px;
+  --measure: 68ch;
+  --line: color-mix(in srgb, var(--air) 18%, var(--ground));
+}
+@media (min-width: 640px) {
+  :root { --gutter: 48px; }
+}
