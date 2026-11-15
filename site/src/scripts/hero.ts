@@ -18,7 +18,7 @@ const ARRIVAL_SECONDS = 1.2, ZONE_FEATHER = 72, ZONE_PAD = 5, TRAIL_FADE = 0.08;
 /** If nobody has touched anything this long after the arrival, one gust fires by itself to show what is possible. */
 const DEMO_GUST_AFTER_S = 2.5, DEMO_GUST_STRENGTH = 0.85, HINT_MS = 1800;
 /** The spoken summary is only updated once the visitor has stopped pushing for this long. */
-const SUMMARY_QUIET_S = 2, SUMMARY_MIN_CHANGE = 0.1;
+const SUMMARY_QUIET_S = 2, SUMMARY_MIN_CHANGE = 0.1, SWEEP_SPEED = 6;
 
 interface Rotor { pose: TurbinePose; angle: number; ms: number }
 interface Letter { el: HTMLElement; spring: Spring; cx: number; cy: number; shown: string }
@@ -184,7 +184,9 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
 
   // ---- input -------------------------------------------------------------
   const at = (e: PointerEvent): [number, number] => { const r = root.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
-  const noteInput = () => { touched = true; lastInputAt = state.t; summaryPending = true; };
+  const noteInput = () => { touched = true; lastInputAt = state.t; };
+  /** A real push: a sweep with some speed in it, or a gust. A pointer merely resting or drifting over the scene is not one. */
+  const notePush = () => { summaryPending = true; };
   const endHold = () => { holding = false; charge = 0; };
   const letGo = (e: PointerEvent) => {
     if (e.pointerId !== downId) return;
@@ -210,10 +212,11 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
     afterScroll = false;
     state = { ...state, pointer: movePointer(from, x, y) };
     noteInput();
+    if (Math.hypot(state.pointer.vx, state.pointer.vy) > SWEEP_SPEED) notePush();
   };
   const onUp = (e: PointerEvent) => {
     if (e.pointerId !== downId) return;
-    if (holding) state = fireBurst(state, charge);
+    if (holding) { const rings = state.bursts.length; state = fireBurst(state, charge); if (state.bursts.length > rings || charge > 0.33) notePush(); }
     endHold(); letGo(e);
   };
   const onCancel = (e: PointerEvent) => { if (e.pointerId === downId) { endHold(); letGo(e); } };

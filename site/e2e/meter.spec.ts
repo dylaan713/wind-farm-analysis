@@ -104,6 +104,8 @@ test('the spoken summary waits for the visitor and is never on a timer', async (
   const summary = page.locator('[data-meter-summary]');
   await expect(summary).toHaveAttribute('aria-live', 'polite');
   // Left alone, it says nothing, however long the page is open.
+  // A pointer that merely arrives and rests over the scene is not a push either.
+  await page.mouse.move(300, 300);
   await page.waitForTimeout(6000);
   const quiet = await summary.innerText();
   expect(quiet).toBe('');
