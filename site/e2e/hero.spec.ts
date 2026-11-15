@@ -45,9 +45,13 @@ test('hold and release sends one gust', async ({ page }) => {
 
 test('a short tap sends nothing', async ({ page }) => {
   await open(page);
-  await fire(page, 'pointerdown', 1, 200, 200);
-  await page.waitForTimeout(60);
-  await fire(page, 'pointerup', 1, 200, 200);
+  // Down and up inside one browser task, so the tap's length does not depend on how fast the test runner is.
+  await page.evaluate(() => {
+    const el = document.querySelector('[data-hero]')!, r = el.getBoundingClientRect();
+    const ev = (type: string) => new PointerEvent(type, { pointerId: 1, pointerType: 'touch', isPrimary: true, clientX: r.left + 200, clientY: r.top + 200, bubbles: true, buttons: 1 });
+    el.dispatchEvent(ev('pointerdown'));
+    el.dispatchEvent(ev('pointerup'));
+  });
   expect((await state(page)).bursts).toBe(0);
 });
 

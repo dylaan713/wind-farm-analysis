@@ -50,7 +50,7 @@ One table, used by Tasks 3 to 8. Lengths marked × s are multiplied by `s = min(
 | Step length | 1.7 px per frame at 60 fps | particle travel = wind × 1.7 × (dt × 60) |
 | Pointer push | radius 190 × s; gain 0.3; pointer velocity smoothed 0.6 old / 0.4 new, decays × 0.95 per frame | |
 | Gust ring | speed 820 px/s × s; band half-width 70 × s; gain 7; fades to 0 at radius 1.1 × width | |
-| Hold to charge | 0.9 s to full; fires on release if charge > 0.12; cancelled by > 10 px of movement | |
+| Hold to charge | 0.9 s to full; fires on release if charge > 0.33 (about 0.3 s; was 0.12, which an ordinary tap exceeded); cancelled by > 10 px of movement | |
 | Wind speed shown | `m/s = hypot(u, v) × 4.5` | |
 | Demo power | 0 below 3 m/s and at or above 25; else `3400 × min(1, ((m/s − 3) / 9)³)` kW | replaced by `powerKw` from `core/src/energy` when that exists |
 | Wake colour | energised `e` set to 1 on crossing a rotor; decays with time constant 1.18 s; particle slowed by `1 − 0.38·e` | |

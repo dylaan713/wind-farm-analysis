@@ -49,8 +49,11 @@ test('a ring grows, fades and is dropped', () => {
   expect(st.bursts).toHaveLength(0);
 });
 
-test('a weak hold fires nothing', () => {
+test('a tap is not a hold: under a third of a full charge fires nothing', () => {
+  // A full charge takes 0.9 s, so this is about 0.3 s. An ordinary tap or click lasts 0.1 to 0.2 s.
   expect(fireBurst(pushing(), 0.12).bursts).toHaveLength(0);
+  expect(fireBurst(pushing(), 0.33).bursts).toHaveLength(0);
+  expect(fireBurst(pushing(), 0.34).bursts).toHaveLength(1);
   expect(fireBurst(pushing(), 0.5).bursts).toHaveLength(1);
   expect(fireBurst(pushing(), 0.5).bursts[0]).toMatchObject({ x: 200, y: 200, r: 0, strength: 0.5 });
 });

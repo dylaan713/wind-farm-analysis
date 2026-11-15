@@ -18,7 +18,7 @@ export interface WindState {
 
 const PUSH_RADIUS = 190, PUSH_GAIN = 0.3, VELOCITY_KEEP = 0.6, VELOCITY_DECAY = 0.95;
 const RING_SPEED = 820, RING_BAND = 70, RING_GAIN = 7, RING_FADE = 1.1, RING_DROP = 1.15;
-const MIN_CHARGE = 0.12, MAX_RINGS = 3;
+const MIN_CHARGE = 0.33, MAX_RINGS = 3;
 
 /** The visitor's wind only: the pointer's push plus any gust rings. */
 export function gust(x: number, y: number, st: WindState): [number, number] {
