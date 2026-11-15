@@ -21,6 +21,6 @@ when they do.
 - Educational model: not investment, tax or engineering advice.
 
 ## Capability
-Seven project-scoped skills in `.claude/skills/` (Python, TypeScript, accessibility, Playwright,
-verification, and `web-design-craft` as the site's quality bar). The installed set, the deferred
-set and the rejected set with reasons are in `.claude/CAPABILITY.md`.
+Six project-scoped skills in `.claude/skills/` (Python, TypeScript, accessibility, Playwright,
+verification). The site's quality bar is Dylan's global `web-design-craft` skill, not copied here.
+The installed set, the deferred set and the rejected set with reasons are in `.claude/CAPABILITY.md`.
