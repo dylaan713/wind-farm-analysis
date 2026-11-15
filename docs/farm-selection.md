@@ -3,7 +3,7 @@
 Energy plan, Task 2. Run on 2026-11-14 from the live data. **Dylan picks; his choice goes at the top
 of this file.**
 
-> **Choice:** _not made yet._
+> **Choice: Black Oak Getty, MN (EIA 58692).** Picked by Dylan on 2026-11-15.
 
 ## How the list was cut down
 
@@ -69,8 +69,45 @@ Two public sources, both checked for these models on 2026-11-14:
 - **Open Energy Platform turbine library:** `Vestas V126/3450`, `V117/3300` and others, with thrust.
   Each row names its own source.
 
-**Not yet done:** neither library's licence terms have been read, and no curve has been compared
-with the manufacturer's own published figures. Both are to do before a curve is committed to the repo.
+**Not yet done:** the Open Energy Platform library's licence terms have not been read. It is not
+used for the chosen farm, so nothing depends on it.
+
+## The chosen turbine's curve, checked on 2026-11-15
+
+`data/turbines/vestas-v110-2.0.csv` is the SAM library's row "Vestas V110-2.0", numbers unchanged
+(19 points, 2 to 19.98 m/s), taken from `deploy/libraries/Wind Turbines.csv` at commit `784177b` of
+`github.com/NREL/SAM`.
+
+- **Licence:** the SAM repository is BSD 3-Clause, which allows copying with the copyright notice
+  kept. The notice and full licence text are in `data/turbines/NOTICE.md`.
+- **Where the library got the curve is not stated.** The speeds are not round numbers (2.9999,
+  3.9946, 5.0039 …), which is what a curve traced from a printed graph looks like. Treat it as a
+  traced curve, not the maker's own table.
+- **Against the maker's brochure** (Vestas 2 MW platform brochure, 03/2024, read from vestas.com;
+  not copied into this repo). The brochure has no power-curve table. What it does give:
+
+  | | Brochure | Library curve |
+  |---|---|---|
+  | Rated power | 2,000 kW | 2,000 kW |
+  | Rotor diameter | 110 m | 110 m |
+  | Cut-in | 3 m/s | first power at 3.0 m/s (27.7 kW); zero at 2 m/s |
+  | Cut-out | **21 m/s** | **last point 19.98 m/s** |
+  | Yearly energy at 6.0 m/s average | about 6.6 GWh | 6.43 GWh |
+  | Yearly energy at 7.5 m/s average | about 9.1 GWh | 8.89 GWh |
+
+  The yearly-energy figures use the brochure's own conditions (one turbine, no losses, Rayleigh
+  wind, 1.225 kg/m3). The brochure's values were **read off a printed chart by eye**, good to
+  roughly ±0.15 GWh, so this shows the library curve is about 2 to 3% under the brochure and no
+  more precisely than that.
+- **Cut-out differs by 1 m/s.** The model stops the turbine at 19.98 m/s, the library's last point;
+  today's brochure says 21. The farm was built in 2016 and the turbine's setting then is not known.
+  Hours that windy are rare, and how many there are at this farm is not yet measured.
+- **Peak efficiency** of the curve is 0.455 near 7.5 m/s, under the 0.593 physical limit. A test
+  holds that.
+- **Thrust is derived**, not published: 0.54 at 8 m/s. Published thrust curves for turbines of this
+  size are typically higher below rated speed, because the derivation treats the electrical output
+  as all the energy the rotor took from the wind. This would make modelled wake losses too small.
+  **Open for Task 4:** keep the plan's derivation and say so, or correct for drivetrain losses.
 
 ## To reproduce
 

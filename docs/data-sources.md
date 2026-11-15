@@ -60,6 +60,27 @@ no key or account. Re-check before relying on any of this after a long gap.
   Climate Change Service information". Read the licence page before the site goes public.
 - **Tested live:** a full year (2023) for one point returned 8,760 hours with none missing.
 
+## Licences and credits
+
+Read on 2026-11-15 from each source's own pages, except where marked. This is a plain reading of
+the published terms, not legal advice. All four cost nothing.
+
+| Source | Terms | What this project must do |
+|---|---|---|
+| US Wind Turbine Database | Public domain (USGS: "free and in the public domain", catalogued as CC0 1.0). An acknowledgment is requested, not required. | Cite the version used and its DOI, `10.5066/F7TX3DN0`. **The exact acknowledgment wording is on a page that refuses automated readers; copy it in a browser.** |
+| EIA Form 923 | US government work, public domain. EIA's logo and photographs are excluded. | Credit "Source: U.S. Energy Information Administration" with the date. Do not use the logo. |
+| Open-Meteo archive | CC BY 4.0. Free tier is for non-commercial use: no subscriptions or advertising; educational content is listed as allowed. Limits: under 10,000 calls a day, 5,000 an hour, 600 a minute. | Show "Weather data by Open-Meteo.com", linked, **next to where the data is displayed**, link the licence, and say the data was changed. Keep the site free of ads and paid features. |
+| ERA5 (the data behind Open-Meteo) | CC BY 4.0 since 2 July 2025 (ECMWF announcement; found by search, not on a Copernicus licence page). | Credit "Generated using Copernicus Climate Change Service information [year]" and cite Hersbach et al. (2023), DOI `10.24381/cds.adbb2d47`. Confirm the wording on the dataset's own References section before launch. |
+| SAM turbine library | BSD 3-Clause. | Keep the copyright notice and licence with the copied row (`data/turbines/NOTICE.md`). Do not suggest the lab endorses this project. |
+
+- **Raw downloads are never committed** (`data/raw/` is git-ignored), so the repo redistributes only
+  the one turbine row and small result files worked out from the data.
+- **A full download for this farm is small:** one request per year, about 26 for the long-term
+  series, against a limit of 10,000 a day.
+- **The site does not yet show any of these credits.** They are needed before `noindex` comes off.
+- **Names:** the farm and the turbine are named as facts. No company logos, and no wording that
+  suggests the farm's owner, Vestas or any agency is involved.
+
 ## What this changes in the plan
 
 - The turbine source is a JSON API, not a CSV download.

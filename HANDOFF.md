@@ -1,5 +1,9 @@
 # Handoff
 
+## State update (2026-11-15, farm chosen, energy task 3)
+- **Done:** Dylan chose **Black Oak Getty, MN**. No due date: steady work. Licences read for all four data sources and the turbine library, recorded in `docs/data-sources.md`. Single-turbine model built (`energy/turbine.py`) with the farm's power curve transcribed and its licence notice kept (`data/turbines/`). `uv run pytest energy`: 50 passed. **Not committed yet.**
+- **Next:** Dylan decides where this is committed (pull request #8 or a new branch on top of it). Then energy plan Task 4, geometry and the wake, after settling the thrust question in `docs/farm-selection.md` (derived thrust is likely too low). Still open: both display names in `site/src/content/site.ts`; the turbine database's acknowledgment wording, to copy in a browser; data credits on the site before launch.
+
 ## State update (2026-11-14, energy tasks 0 to 2)
 - **Done:** site and energy-plan fix merged to `main` (pull requests #4 to #7). On branch `energy/setup` (pull request #8): Python project (`uv`, Python 3.12), the three data sources confirmed and recorded in `docs/data-sources.md`, cached downloaders with tests, farm-selection rules with tests, and a shortlist of five farms in `docs/farm-selection.md`. Wind requests are pinned to ERA5 after finding the service silently switches model in 2017. `uv run pytest energy`: 25 passed.
 - **Next:** **Dylan picks the farm** (recommendation: Black Oak Getty, MN). Then energy plan Task 3 onward: transcribe and check the turbine's power curve (read the library's licence first), single-turbine model, wake model, farm, validation. Still open: both display names in `site/src/content/site.ts`; a date it must be showable by; Open-Meteo's licence terms.
