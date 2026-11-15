@@ -10,6 +10,18 @@ const open = async (page: Page) => {
   await page.goto('/?debug');
   await page.waitForFunction(() => document.documentElement.classList.contains('live') && document.documentElement.classList.contains('arrived'));
 };
+/** Temporary diagnostic (2026-11-14): these tests failed on CI's runner without a known cause. Records every pointer and scroll event the page receives, and prints it with the scene's state if the test fails. */
+const recordInput = (page: Page) =>
+  page.addInitScript(() => {
+    const log: unknown[] = ((window as unknown as { __ev: unknown[] }).__ev = []);
+    for (const t of ['pointerdown', 'pointermove', 'pointerup', 'pointerleave', 'pointercancel', 'scroll'])
+      window.addEventListener(t, (e) => { const p = e as PointerEvent; log.push([t, p.pointerType, Math.round(p.clientX), Math.round(p.clientY), e.isTrusted, Math.round(performance.now())]); }, true);
+  });
+const diagnose = async (page: Page, label: string) => {
+  const d = await page.evaluate(() => ({ ev: (window as unknown as { __ev: unknown[] }).__ev, state: (window as unknown as { __hero?: { state(): unknown } }).__hero?.state(), classes: document.documentElement.className, now: Math.round(performance.now()) })).catch((e) => ({ error: String(e) }));
+  console.log(`DIAG ${label}: ${JSON.stringify(d)}`);
+};
+
 const tap = (page: Page) =>
   page.evaluate(() => {
     const el = document.querySelector('[data-hero]')!, r = el.getBoundingClientRect();
@@ -100,8 +112,11 @@ test('a scroll followed by a mouse move does not fake a sweep', async ({ page },
 });
 
 test('left alone, the page sends one gust and points at the words that explain it', async ({ page }) => {
+  await recordInput(page);
   await page.goto('/?debug');
-  await expect.poll(() => page.evaluate(() => document.documentElement.classList.contains('hinting')), { timeout: 9000, intervals: [50] }).toBe(true);
+  try {
+    await expect.poll(() => page.evaluate(() => document.documentElement.classList.contains('hinting')), { timeout: 9000, intervals: [50] }).toBe(true);
+  } catch (err) { await diagnose(page, 'no demo gust'); throw err; }
   expect(await page.evaluate(() => (window as unknown as { __hero: Hero }).__hero.state().demoGustDone)).toBe(true);
   await expect.poll(() => page.evaluate(() => document.documentElement.classList.contains('hinting')), { timeout: 4000 }).toBe(false);
 });
