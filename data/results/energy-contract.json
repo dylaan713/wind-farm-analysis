@@ -1,0 +1,75 @@
+{
+ "model_version": "1.0.0",
+ "generated": "2026-11-16",
+ "farm": {
+  "name": "Black Oak Getty",
+  "eia_plant_id": 58692,
+  "state": "MN",
+  "capacity_mw": 78.0,
+  "turbine_count": 39,
+  "turbine_model": "Vestas V110-2.0",
+  "hub_height_m": 80.0,
+  "rotor_diameter_m": 110.0
+ },
+ "energy_mwh": {
+  "p50": 298395,
+  "p75": 286237,
+  "p90": 275221,
+  "p99": 256190
+ },
+ "energy_mwh_10yr": {
+  "p50": 298603,
+  "p75": 291730,
+  "p90": 285484,
+  "p99": 274664
+ },
+ "monthly_shape": [
+  0.094405,
+  0.086529,
+  0.094168,
+  0.096392,
+  0.086889,
+  0.067551,
+  0.052902,
+  0.0573,
+  0.080269,
+  0.096112,
+  0.09402,
+  0.093463
+ ],
+ "wake_loss_pct": 5.59,
+ "blind": {
+  "assumed_losses_pct": 13.19,
+  "error_pct": -24.92,
+  "months_used": 96
+ },
+ "calibration": {
+  "factor": 1.1583,
+  "note": "absorbs real losses and model and wind-data bias; not a loss figure"
+ },
+ "uncertainty": {
+  "sigma_iav": 0.0543,
+  "sigma_model": 0.03
+ },
+ "validation": {
+  "calibration_years": [
+   2018,
+   2019,
+   2020,
+   2021,
+   2022,
+   2023,
+   2024
+  ],
+  "holdout_year": 2025,
+  "annual_error_pct": 1.46,
+  "monthly_mape_pct": 5.53,
+  "r2": 0.913,
+  "excluded_months": []
+ },
+ "assumptions": {
+  "alpha": 0.14,
+  "wake_k": 0.075,
+  "wind_source": "ERA5 via Open-Meteo"
+ }
+}

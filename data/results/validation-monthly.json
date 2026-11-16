@@ -1,0 +1,775 @@
+{
+ "calibration_factor": 1.1583,
+ "assumed_losses_pct": 13.19,
+ "holdout_year": 2025,
+ "months": [
+  {
+   "month": "2018-01",
+   "modelled_mwh": 26822.0,
+   "blind_mwh": 23283.2,
+   "calibrated_mwh": 31069.3,
+   "reported_mwh": 26851.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2018-02",
+   "modelled_mwh": 21070.2,
+   "blind_mwh": 18290.3,
+   "calibrated_mwh": 24406.6,
+   "reported_mwh": 27921.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2018-03",
+   "modelled_mwh": 23081.7,
+   "blind_mwh": 20036.4,
+   "calibrated_mwh": 26736.6,
+   "reported_mwh": 26035.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2018-04",
+   "modelled_mwh": 22447.8,
+   "blind_mwh": 19486.1,
+   "calibrated_mwh": 26002.4,
+   "reported_mwh": 26373.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2018-05",
+   "modelled_mwh": 15074.9,
+   "blind_mwh": 13085.9,
+   "calibrated_mwh": 17462.0,
+   "reported_mwh": 21164.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2018-06",
+   "modelled_mwh": 18119.0,
+   "blind_mwh": 15728.5,
+   "calibrated_mwh": 20988.2,
+   "reported_mwh": 21447.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2018-07",
+   "modelled_mwh": 13785.0,
+   "blind_mwh": 11966.2,
+   "calibrated_mwh": 15967.8,
+   "reported_mwh": 17189.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2018-08",
+   "modelled_mwh": 12325.6,
+   "blind_mwh": 10699.4,
+   "calibrated_mwh": 14277.4,
+   "reported_mwh": 15136.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2018-09",
+   "modelled_mwh": 19789.3,
+   "blind_mwh": 17178.3,
+   "calibrated_mwh": 22922.9,
+   "reported_mwh": 23555.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2018-10",
+   "modelled_mwh": 24082.1,
+   "blind_mwh": 20904.8,
+   "calibrated_mwh": 27895.5,
+   "reported_mwh": 26898.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2018-11",
+   "modelled_mwh": 19377.5,
+   "blind_mwh": 16820.9,
+   "calibrated_mwh": 22445.9,
+   "reported_mwh": 25316.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2018-12",
+   "modelled_mwh": 20455.0,
+   "blind_mwh": 17756.3,
+   "calibrated_mwh": 23694.1,
+   "reported_mwh": 24137.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2019-01",
+   "modelled_mwh": 23170.8,
+   "blind_mwh": 20113.7,
+   "calibrated_mwh": 26839.9,
+   "reported_mwh": 25547.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2019-02",
+   "modelled_mwh": 17695.2,
+   "blind_mwh": 15360.6,
+   "calibrated_mwh": 20497.2,
+   "reported_mwh": 19124.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2019-03",
+   "modelled_mwh": 23828.8,
+   "blind_mwh": 20684.9,
+   "calibrated_mwh": 27602.1,
+   "reported_mwh": 28603.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2019-04",
+   "modelled_mwh": 21614.7,
+   "blind_mwh": 18763.0,
+   "calibrated_mwh": 25037.4,
+   "reported_mwh": 25815.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2019-05",
+   "modelled_mwh": 20569.5,
+   "blind_mwh": 17855.6,
+   "calibrated_mwh": 23826.6,
+   "reported_mwh": 25671.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2019-06",
+   "modelled_mwh": 14404.9,
+   "blind_mwh": 12504.4,
+   "calibrated_mwh": 16685.9,
+   "reported_mwh": 20212.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2019-07",
+   "modelled_mwh": 11176.0,
+   "blind_mwh": 9701.5,
+   "calibrated_mwh": 12945.8,
+   "reported_mwh": 15190.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2019-08",
+   "modelled_mwh": 13821.4,
+   "blind_mwh": 11997.8,
+   "calibrated_mwh": 16010.0,
+   "reported_mwh": 15599.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2019-09",
+   "modelled_mwh": 23509.2,
+   "blind_mwh": 20407.5,
+   "calibrated_mwh": 27231.9,
+   "reported_mwh": 26299.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2019-10",
+   "modelled_mwh": 29134.1,
+   "blind_mwh": 25290.3,
+   "calibrated_mwh": 33747.5,
+   "reported_mwh": 32441.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2019-11",
+   "modelled_mwh": 22576.2,
+   "blind_mwh": 19597.6,
+   "calibrated_mwh": 26151.2,
+   "reported_mwh": 27334.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2019-12",
+   "modelled_mwh": 23808.8,
+   "blind_mwh": 20667.5,
+   "calibrated_mwh": 27578.9,
+   "reported_mwh": 25661.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2020-01",
+   "modelled_mwh": 22437.9,
+   "blind_mwh": 19477.5,
+   "calibrated_mwh": 25990.9,
+   "reported_mwh": 22547.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2020-02",
+   "modelled_mwh": 23480.5,
+   "blind_mwh": 20382.6,
+   "calibrated_mwh": 27198.6,
+   "reported_mwh": 27641.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2020-03",
+   "modelled_mwh": 25547.6,
+   "blind_mwh": 22176.9,
+   "calibrated_mwh": 29593.0,
+   "reported_mwh": 29057.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2020-04",
+   "modelled_mwh": 20756.0,
+   "blind_mwh": 18017.6,
+   "calibrated_mwh": 24042.7,
+   "reported_mwh": 25069.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2020-05",
+   "modelled_mwh": 19136.6,
+   "blind_mwh": 16611.8,
+   "calibrated_mwh": 22166.9,
+   "reported_mwh": 26022.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2020-06",
+   "modelled_mwh": 22930.4,
+   "blind_mwh": 19905.0,
+   "calibrated_mwh": 26561.4,
+   "reported_mwh": 27347.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2020-07",
+   "modelled_mwh": 12923.1,
+   "blind_mwh": 11218.0,
+   "calibrated_mwh": 14969.4,
+   "reported_mwh": 14907.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2020-08",
+   "modelled_mwh": 15645.7,
+   "blind_mwh": 13581.5,
+   "calibrated_mwh": 18123.2,
+   "reported_mwh": 17839.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2020-09",
+   "modelled_mwh": 20183.6,
+   "blind_mwh": 17520.7,
+   "calibrated_mwh": 23379.7,
+   "reported_mwh": 21926.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2020-10",
+   "modelled_mwh": 25493.1,
+   "blind_mwh": 22129.7,
+   "calibrated_mwh": 29529.9,
+   "reported_mwh": 29551.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2020-11",
+   "modelled_mwh": 28243.2,
+   "blind_mwh": 24516.9,
+   "calibrated_mwh": 32715.5,
+   "reported_mwh": 32509.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2020-12",
+   "modelled_mwh": 20361.9,
+   "blind_mwh": 17675.4,
+   "calibrated_mwh": 23586.2,
+   "reported_mwh": 24734.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2021-01",
+   "modelled_mwh": 20050.1,
+   "blind_mwh": 17404.7,
+   "calibrated_mwh": 23225.0,
+   "reported_mwh": 22409.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2021-02",
+   "modelled_mwh": 18140.9,
+   "blind_mwh": 15747.5,
+   "calibrated_mwh": 21013.5,
+   "reported_mwh": 21775.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2021-03",
+   "modelled_mwh": 29205.7,
+   "blind_mwh": 25352.4,
+   "calibrated_mwh": 33830.4,
+   "reported_mwh": 32928.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2021-04",
+   "modelled_mwh": 21998.3,
+   "blind_mwh": 19095.9,
+   "calibrated_mwh": 25481.7,
+   "reported_mwh": 28285.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2021-05",
+   "modelled_mwh": 17902.6,
+   "blind_mwh": 15540.6,
+   "calibrated_mwh": 20737.4,
+   "reported_mwh": 24685.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2021-06",
+   "modelled_mwh": 13484.4,
+   "blind_mwh": 11705.4,
+   "calibrated_mwh": 15619.7,
+   "reported_mwh": 19447.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2021-07",
+   "modelled_mwh": 10296.9,
+   "blind_mwh": 8938.4,
+   "calibrated_mwh": 11927.4,
+   "reported_mwh": 13524.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2021-08",
+   "modelled_mwh": 18475.1,
+   "blind_mwh": 16037.6,
+   "calibrated_mwh": 21400.6,
+   "reported_mwh": 19324.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2021-09",
+   "modelled_mwh": 21264.9,
+   "blind_mwh": 18459.3,
+   "calibrated_mwh": 24632.2,
+   "reported_mwh": 25943.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2021-10",
+   "modelled_mwh": 20192.3,
+   "blind_mwh": 17528.2,
+   "calibrated_mwh": 23389.7,
+   "reported_mwh": 24302.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2021-11",
+   "modelled_mwh": 25647.2,
+   "blind_mwh": 22263.4,
+   "calibrated_mwh": 29708.4,
+   "reported_mwh": 28785.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2021-12",
+   "modelled_mwh": 26634.6,
+   "blind_mwh": 23120.5,
+   "calibrated_mwh": 30852.1,
+   "reported_mwh": 27358.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2022-01",
+   "modelled_mwh": 29717.1,
+   "blind_mwh": 25796.4,
+   "calibrated_mwh": 34422.8,
+   "reported_mwh": 33818.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2022-02",
+   "modelled_mwh": 28746.4,
+   "blind_mwh": 24953.7,
+   "calibrated_mwh": 33298.4,
+   "reported_mwh": 31146.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2022-03",
+   "modelled_mwh": 27775.5,
+   "blind_mwh": 24110.9,
+   "calibrated_mwh": 32173.7,
+   "reported_mwh": 31028.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2022-04",
+   "modelled_mwh": 34549.4,
+   "blind_mwh": 29991.1,
+   "calibrated_mwh": 40020.3,
+   "reported_mwh": 38752.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2022-05",
+   "modelled_mwh": 23128.2,
+   "blind_mwh": 20076.7,
+   "calibrated_mwh": 26790.5,
+   "reported_mwh": 26437.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2022-06",
+   "modelled_mwh": 22451.4,
+   "blind_mwh": 19489.3,
+   "calibrated_mwh": 26006.6,
+   "reported_mwh": 26289.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2022-07",
+   "modelled_mwh": 16453.6,
+   "blind_mwh": 14282.8,
+   "calibrated_mwh": 19059.0,
+   "reported_mwh": 19499.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2022-08",
+   "modelled_mwh": 14084.9,
+   "blind_mwh": 12226.5,
+   "calibrated_mwh": 16315.2,
+   "reported_mwh": 15683.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2022-09",
+   "modelled_mwh": 18479.5,
+   "blind_mwh": 16041.3,
+   "calibrated_mwh": 21405.7,
+   "reported_mwh": 21645.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2022-10",
+   "modelled_mwh": 25898.6,
+   "blind_mwh": 22481.6,
+   "calibrated_mwh": 29999.6,
+   "reported_mwh": 29768.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2022-11",
+   "modelled_mwh": 26856.6,
+   "blind_mwh": 23313.2,
+   "calibrated_mwh": 31109.3,
+   "reported_mwh": 30514.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2022-12",
+   "modelled_mwh": 27614.6,
+   "blind_mwh": 23971.3,
+   "calibrated_mwh": 31987.4,
+   "reported_mwh": 28481.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2023-01",
+   "modelled_mwh": 19423.3,
+   "blind_mwh": 16860.7,
+   "calibrated_mwh": 22499.0,
+   "reported_mwh": 21891.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2023-02",
+   "modelled_mwh": 25366.4,
+   "blind_mwh": 22019.7,
+   "calibrated_mwh": 29383.2,
+   "reported_mwh": 28860.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2023-03",
+   "modelled_mwh": 26036.4,
+   "blind_mwh": 22601.2,
+   "calibrated_mwh": 30159.2,
+   "reported_mwh": 26650.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2023-04",
+   "modelled_mwh": 29175.1,
+   "blind_mwh": 25325.9,
+   "calibrated_mwh": 33795.0,
+   "reported_mwh": 26411.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2023-05",
+   "modelled_mwh": 22730.4,
+   "blind_mwh": 19731.5,
+   "calibrated_mwh": 26329.8,
+   "reported_mwh": 24556.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2023-06",
+   "modelled_mwh": 10118.1,
+   "blind_mwh": 8783.2,
+   "calibrated_mwh": 11720.3,
+   "reported_mwh": 13951.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2023-07",
+   "modelled_mwh": 11315.8,
+   "blind_mwh": 9822.8,
+   "calibrated_mwh": 13107.6,
+   "reported_mwh": 13375.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2023-08",
+   "modelled_mwh": 14434.3,
+   "blind_mwh": 12529.9,
+   "calibrated_mwh": 16720.0,
+   "reported_mwh": 17697.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2023-09",
+   "modelled_mwh": 15555.0,
+   "blind_mwh": 13502.7,
+   "calibrated_mwh": 18018.1,
+   "reported_mwh": 19175.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2023-10",
+   "modelled_mwh": 24498.5,
+   "blind_mwh": 21266.2,
+   "calibrated_mwh": 28377.8,
+   "reported_mwh": 26593.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2023-11",
+   "modelled_mwh": 23417.6,
+   "blind_mwh": 20327.9,
+   "calibrated_mwh": 27125.7,
+   "reported_mwh": 27277.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2023-12",
+   "modelled_mwh": 22378.9,
+   "blind_mwh": 19426.3,
+   "calibrated_mwh": 25922.6,
+   "reported_mwh": 26270.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2024-01",
+   "modelled_mwh": 19286.2,
+   "blind_mwh": 16741.6,
+   "calibrated_mwh": 22340.1,
+   "reported_mwh": 20565.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2024-02",
+   "modelled_mwh": 21312.2,
+   "blind_mwh": 18500.3,
+   "calibrated_mwh": 24687.0,
+   "reported_mwh": 26557.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2024-03",
+   "modelled_mwh": 26760.7,
+   "blind_mwh": 23230.0,
+   "calibrated_mwh": 30998.2,
+   "reported_mwh": 30784.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2024-04",
+   "modelled_mwh": 29157.5,
+   "blind_mwh": 25310.5,
+   "calibrated_mwh": 33774.5,
+   "reported_mwh": 33785.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2024-05",
+   "modelled_mwh": 22123.7,
+   "blind_mwh": 19204.8,
+   "calibrated_mwh": 25627.0,
+   "reported_mwh": 25953.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2024-06",
+   "modelled_mwh": 20040.9,
+   "blind_mwh": 17396.8,
+   "calibrated_mwh": 23214.4,
+   "reported_mwh": 23104.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2024-07",
+   "modelled_mwh": 11640.7,
+   "blind_mwh": 10104.9,
+   "calibrated_mwh": 13484.0,
+   "reported_mwh": 14556.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2024-08",
+   "modelled_mwh": 16068.7,
+   "blind_mwh": 13948.6,
+   "calibrated_mwh": 18613.1,
+   "reported_mwh": 17770.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2024-09",
+   "modelled_mwh": 21009.8,
+   "blind_mwh": 18237.9,
+   "calibrated_mwh": 24336.7,
+   "reported_mwh": 24878.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2024-10",
+   "modelled_mwh": 25609.7,
+   "blind_mwh": 22230.9,
+   "calibrated_mwh": 29665.0,
+   "reported_mwh": 30694.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2024-11",
+   "modelled_mwh": 23760.5,
+   "blind_mwh": 20625.6,
+   "calibrated_mwh": 27522.9,
+   "reported_mwh": 27542.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2024-12",
+   "modelled_mwh": 23529.7,
+   "blind_mwh": 20425.3,
+   "calibrated_mwh": 27255.6,
+   "reported_mwh": 25578.0,
+   "used_for": "calibration"
+  },
+  {
+   "month": "2025-01",
+   "modelled_mwh": 28434.6,
+   "blind_mwh": 24683.1,
+   "calibrated_mwh": 32937.2,
+   "reported_mwh": 32824.0,
+   "used_for": "holdout"
+  },
+  {
+   "month": "2025-02",
+   "modelled_mwh": 22105.3,
+   "blind_mwh": 19188.8,
+   "calibrated_mwh": 25605.7,
+   "reported_mwh": 27954.0,
+   "used_for": "holdout"
+  },
+  {
+   "month": "2025-03",
+   "modelled_mwh": 26386.5,
+   "blind_mwh": 22905.2,
+   "calibrated_mwh": 30564.8,
+   "reported_mwh": 28844.0,
+   "used_for": "holdout"
+  },
+  {
+   "month": "2025-04",
+   "modelled_mwh": 24304.7,
+   "blind_mwh": 21098.1,
+   "calibrated_mwh": 28153.4,
+   "reported_mwh": 29036.0,
+   "used_for": "holdout"
+  },
+  {
+   "month": "2025-05",
+   "modelled_mwh": 22034.0,
+   "blind_mwh": 19126.9,
+   "calibrated_mwh": 25523.1,
+   "reported_mwh": 25900.0,
+   "used_for": "holdout"
+  },
+  {
+   "month": "2025-06",
+   "modelled_mwh": 17197.3,
+   "blind_mwh": 14928.4,
+   "calibrated_mwh": 19920.5,
+   "reported_mwh": 20322.0,
+   "used_for": "holdout"
+  },
+  {
+   "month": "2025-07",
+   "modelled_mwh": 11780.7,
+   "blind_mwh": 10226.4,
+   "calibrated_mwh": 13646.2,
+   "reported_mwh": 14599.0,
+   "used_for": "holdout"
+  },
+  {
+   "month": "2025-08",
+   "modelled_mwh": 14614.4,
+   "blind_mwh": 12686.2,
+   "calibrated_mwh": 16928.5,
+   "reported_mwh": 15617.0,
+   "used_for": "holdout"
+  },
+  {
+   "month": "2025-09",
+   "modelled_mwh": 16775.4,
+   "blind_mwh": 14562.1,
+   "calibrated_mwh": 19431.8,
+   "reported_mwh": 18896.0,
+   "used_for": "holdout"
+  },
+  {
+   "month": "2025-10",
+   "modelled_mwh": 29757.2,
+   "blind_mwh": 25831.1,
+   "calibrated_mwh": 34469.2,
+   "reported_mwh": 31315.0,
+   "used_for": "holdout"
+  },
+  {
+   "month": "2025-11",
+   "modelled_mwh": 25723.9,
+   "blind_mwh": 22329.9,
+   "calibrated_mwh": 29797.2,
+   "reported_mwh": 31014.0,
+   "used_for": "holdout"
+  },
+  {
+   "month": "2025-12",
+   "modelled_mwh": 27701.3,
+   "blind_mwh": 24046.5,
+   "calibrated_mwh": 32087.8,
+   "reported_mwh": 28293.0,
+   "used_for": "holdout"
+  }
+ ]
+}
