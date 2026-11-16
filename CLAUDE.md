@@ -18,7 +18,7 @@ Status 2026-11-15: the farm is Black Oak Getty, MN. The single-turbine model and
 built (`energy/turbine.py`, `data/turbines/`); the wake model is next (energy plan Task 4).
 
 Status 2026-11-16: energy plan Tasks 4 to 9 are built on stacked branches awaiting review and
-merge (pull requests #10 to #14, then the notes): wake, farm, validation, uncertainty and result
+merge (pull requests #8 to #15, in that order; the top branch is `docs/energy-notes`): wake, farm, validation, uncertainty and result
 files (`uv run python -m energy.run`), the TypeScript version (`core/src/energy/`), and draft study
 notes (`docs/notes/energy.md`, not yet checked by Dylan).
 
