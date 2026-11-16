@@ -97,11 +97,18 @@ effect           = d × f
 Two results are produced and both are published.
 
 A. Blind prediction: no number is taken from the farm's own output.
-   assumed_losses     = 1 − (1−0.03)(1−0.02)(1−0.02)(1−0.02)      = 0.0870
+   assumed_losses     = 1 − (1−0.0550)(1−0.0201)(1−0.0395)(1−0.0240)  = 0.1319
                         availability 3%, electrical 2%, turbine performance 2%, environmental 2%
                         (typical published values; cite the source in Task 6; fixed BEFORE looking at the farm's output)
    blind(month)       = modelled waked(month) × (1 − assumed_losses)
    blind_error        = (sum blind − sum reported) / sum reported      over ALL usable months
+
+   Changed 2026-11-16, approved by Dylan, before the farm's output was looked at: the four parts
+   were 3%, 2%, 2%, 2% (0.0870), which had no source. They are now the defaults in the System
+   Advisor Model's wind inputs (github.com/NREL/SAM, `deploy/runtime/defaults/Wind Power_Single
+   Owner.json`, commit e6935c1): availability 5.50%, electrical 2.01%, turbine performance 3.95%,
+   environmental 2.40%. SAM's fifth group, curtailment and operating strategies (2.80%), is left
+   out. These are a tool's general defaults, not figures for this farm.
 
 B. Calibrated on earlier years, tested on a held-out year.
    calibration_factor = sum(reported net MWh) / sum(modelled waked MWh)     over calibration months only
@@ -140,7 +147,7 @@ P75, P90, P99     = the 25th, 10th and 1st percentiles of the draws
   "energy_mwh_10yr": { "p50": 0, "p75": 0, "p90": 0, "p99": 0 },
   "monthly_shape": [0,0,0,0,0,0,0,0,0,0,0,0],
   "wake_loss_pct": 0,
-  "blind": { "assumed_losses_pct": 8.7, "error_pct": 0, "months_used": 0 },
+  "blind": { "assumed_losses_pct": 13.2, "error_pct": 0, "months_used": 0 },
   "calibration": { "factor": 0, "note": "absorbs real losses and model and wind-data bias; not a loss figure" },
   "uncertainty": { "sigma_iav": 0, "sigma_model": 0 },
   "validation": { "calibration_years": [], "holdout_year": 0, "annual_error_pct": 0,
@@ -449,9 +456,9 @@ def test_calibration_factor_is_recovered(): # reported = 0.85 × modelled exactl
 def test_holdout_is_not_used_for_calibration():
     # holdout year reported = 0.70 × modelled, others 0.85 -> calibration_factor stays 0.85, annual_error_pct == pytest.approx(21.43, abs=0.01)
 def test_error_sign():                      # model above reported gives a positive error
-def test_assumed_losses_value():            assert ASSUMED_LOSSES == pytest.approx(0.087044, abs=1e-6)
+def test_assumed_losses_value():            assert ASSUMED_LOSSES == pytest.approx(0.131936, abs=1e-6)
 def test_blind_error_uses_no_farm_output_for_tuning():
-    # reported = 0.85 × modelled in every month -> blind_error_pct == pytest.approx(7.407, abs=0.01)   ((1−0.087044)/0.85 − 1)
+    # reported = 0.85 × modelled in every month -> blind_error_pct == pytest.approx(2.125, abs=0.01)   ((1−0.131936)/0.85 − 1)
     # and it is the same whichever year is held out
 def test_blind_error_covers_all_usable_months():   # blind_months == calibration months + holdout months
 def test_calibration_factor_may_exceed_one(): # reported = 1.10 × modelled -> factor == 1.10, no error raised
