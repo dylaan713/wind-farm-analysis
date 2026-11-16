@@ -1,5 +1,21 @@
 # Handoff
 
+## For the finance partner: the energy contract is ready (2026-11-16)
+- **Where:** `data/results/energy-contract.json`, on branch `energy/results` (pull request #13) until Dylan merges #8 to #13. To read it now: `git fetch origin && git switch energy/results`. To rebuild it: `uv sync`, then `uv run python -m energy.run`.
+- **What goes into the workbook** (finance plan Task 5 Step 3, the three energy placeholders, and `capacity_mw`):
+
+  | Workbook input | Contract field | Value |
+  |---|---|---|
+  | `energy_p50_mwh` | `energy_mwh.p50` | 298,395 |
+  | `energy_p90_mwh` | `energy_mwh.p90` | 275,221 |
+  | `energy_p99_mwh` | `energy_mwh.p99` | 256,190 |
+  | `capacity_mw` | `farm.capacity_mw` | 78.0 |
+
+  These are the one-year figures. `energy_mwh_10yr` holds the ten-year averages (P50 298,603, P90 285,484, P99 274,664).
+- **What the numbers are.** They are net energy at the farm's meter: the model's output scaled by one factor (1.1583) fitted to what the farm reported in 2018 to 2024. So P50 sits at the farm's own average (it reported between 272,706 and 333,060 MWh a year from 2018 to 2025). Do not take losses off again.
+- **Read this before sizing debt on P90 or P99.** How far they sit below P50 comes from two spreads: the wind from year to year (5.43%, from 2000 to 2025) and the model's error (3%). The 3% is the plan's floor, used because the calibrated model was 1.46% high on the held-out year 2025. It says the scaling held for that year. It does **not** say the model is accurate: with no scaling and the assumed losses taken off, the model was 24.92% below what the farm reported, most likely because the wind data reads low at this site. Over all eight years the scaled model's yearly error ranged from −2.89% to +3.83%, drifting upward (the farm made a little less each year relative to the model), and seven of those years were used to fit the factor. So these P90 and P99 describe **this farm, given its own operating record**. They are tighter than anything that could have been claimed before it was built, and the 3% may be too small. Whether to keep it is Dylan's open decision; if it changes, P90 and P99 fall and P50 does not move.
+- Educational model: not investment, tax or engineering advice.
+
 ## Pick up here (paused 2026-11-15)
 - **Done:** farm chosen (Black Oak Getty, MN), energy plan Tasks 0 to 3 built. Two pull requests are open and wait on the finance partner's review, then Dylan's merge: **#8** (`energy/setup` into `main`) and **#9** (`energy/turbine` into `energy/setup`; merge #8 first). Working tree clean, everything pushed. `uv run pytest energy`: 57 passed. No due date: steady work.
 - **Next:** energy plan **Task 4, geometry and the wake** (`energy/geometry.py`, `energy/wake.py`), on a new branch from `energy/turbine`; it does not need the merges. Open, none blocking Task 4: both display names in `site/src/content/site.ts`; the turbine database's acknowledgment wording, to copy in a browser from `https://energy.usgs.gov/uswtdb/`; the ERA5 credit wording, to confirm on the dataset's own page; the data credits in `docs/data-sources.md` on the site before `noindex` comes off, including the Open Energy Platform credit wherever the 0.78 thrust figure is shown; how many hours at this farm fall between the two cut-out speeds (19.98 and 21 m/s); the effect of the light-wind thrust shortfall on wake loss.
@@ -7,7 +23,7 @@
 
 ## State update (2026-11-16, energy task 7)
 - **Done:** energy plan Task 7 built: `energy/uncertainty.py`, `energy/export.py`, `energy/run.py`, with tests. `uv run pytest energy`: 122 passed. `uv run python -m energy.run` now goes from the cached downloads to all five files in `data/results/` and `data/fixtures/energy-cases.json` (largest 25 KB), and reproduces the Task 6 numbers exactly. Long-term series 2000 to 2025: year-to-year sigma 0.0543, model sigma 0.03 (the floor). **One year, MWh: P50 298,395, P75 286,237, P90 275,221, P99 256,190. Ten years: P50 298,603, P75 291,730, P90 285,484, P99 274,664.** Wake loss over 2000 to 2025: 5.59%. **Not committed yet** (this entry and the diagnosis entry below included).
-- **Next:** Dylan approves a branch `energy/results` from `energy/validate`, the commit, push and pull request, and the wording fix in pull request #12. Dylan tells the finance partner the contract is ready (finance plan Task 9 Step 4). Then energy plan Task 8, the TypeScript version in `core/src/energy/`.
+- **Next:** committed and pushed as pull request #13; pull request #12's wording corrected. **Open decision for Dylan: the 3% model sigma** (see the note for the finance partner at the top). Then energy plan Task 8, the TypeScript version in `core/src/energy/`.
 
 ## State update (2026-11-16, why the model runs low: diagnosis only, nothing changed)
 - **Done:** read-only checks on the −24.92% blind error; no model code changed. **Correction to the entry below and to pull request #12: before losses the model is 13.5% below the reported total (reported is 15.8% above modelled), not "16% low".** Sizes, each alone: removing every wake leaves it 8.5% low; removing the shear correction leaves it 8.0% low; reversing the wind direction changes the total by nothing, so direction is not the cause (and the total cannot test the convention). Wind speed 8% higher (about 0.5 m/s at hub height) closes the gap before losses. The shortfall is seasonal: reported ÷ modelled is 1.24 to 1.26 in May to July and 1.09 to 1.10 in December and January. Wind is served from the ERA5 point at 45.75 N 95.00 W, 11 km north of the farm centre. Most likely cause: the ERA5 wind is too low here; one published comparison found about −1 m/s at a site in Oklahoma (Wind Energy Science, 7, 487, 2022). Not established for this site.
