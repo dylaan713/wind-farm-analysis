@@ -51,6 +51,10 @@ energy.*
 >   energy shown as orange dots travelling along it.
 > - **More wind**: 520 streaks on a phone and 1,200 on a laptop (were 340 and 680), each with a
 >   longer trail. 700 on a phone scored 76 on Lighthouse mobile; 520 scores 100.
+> - **Air takes colour where a blade touches it**, not on crossing the rotor's line: air that
+>   slips between the blades stays blue, so the wake comes off the blades as they turn. A real
+>   turbine takes energy from all the air crossing the circle its blades sweep, and the farm
+>   model works that way; this is how the picture shows it, and the code says so.
 > - **Wakes widen.** Air that crossed a rotor above the hub drifts up, below it drifts down, at
 >   four times the farm model's rate so it can be seen. The code says so.
 > - **Text sits on the moving air itself: no boxes.** Nothing is erased behind text and no air is

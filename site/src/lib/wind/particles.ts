@@ -1,5 +1,5 @@
-// The air itself: small particles carried by the wind. Each one arrives blue. When it
-// passes through a rotor the turbine takes its energy: it turns orange and slows down,
+// The air itself: small particles carried by the wind. Each one arrives blue. When a
+// turbine's blade touches it the turbine takes its energy: it turns orange and slows down,
 // then fades back to blue. That trail is the wake, and it widens as it goes: air that
 // crossed above the hub drifts up, air that crossed below drifts down.
 import { palette, rgb } from '../palette';
@@ -30,12 +30,43 @@ const fromLight = (l: number) => Math.round(255 * (l <= 0.0031308 ? l * 12.92 : 
 // two. Blending the screen values instead passes through a dull purple that dark text cannot sit on.
 const AIR = rgb(palette.air).map(toLight), ENERGY = rgb(palette.signal).map(toLight);
 
+/** Where a turbine's three blades point right now: cos and sin of each, six numbers. */
+export type Blades = readonly [number, number, number, number, number, number];
+
+export function bladesAt(angle: number): Blades {
+  const third = (Math.PI * 2) / 3;
+  return [Math.cos(angle), Math.sin(angle), Math.cos(angle + third), Math.sin(angle + third), Math.cos(angle + 2 * third), Math.sin(angle + 2 * third)];
+}
+
+/**
+ * Is the point (dx, dy), measured from a hub, on one of the blades? A blade runs from the hub to
+ * the tip and narrows as it goes; the test allows a little more than its drawn width so that a
+ * fast blade does not step clean over a streak between two frames.
+ *
+ * A real turbine takes energy from all the air crossing the circle its blades sweep, not only the
+ * air a blade touches, and the farm model works that way. Colouring the air where a blade meets
+ * it is how the picture shows it (Dylan, 2026-11-16).
+ */
+export function onBlade(dx: number, dy: number, radius: number, scale: number, blades: Blades): boolean {
+  if (dx * dx + dy * dy > radius * radius) return false;
+  for (let i = 0; i < 6; i += 2) {
+    const c = blades[i]!, s = blades[i + 1]!, along = dx * c + dy * s;
+    if (along < 0) continue;
+    if (Math.abs(dx * s - dy * c) <= (9 - 7 * (along / radius)) * scale + 2.5) return true;
+  }
+  return false;
+}
+
 export function seedParticles(n: number, w: number, h: number, rand: () => number): Particle[] {
   return Array.from({ length: n }, () => ({ x: rand() * w, y: rand() * h * SPAWN_BAND, e: 0 }));
 }
 
-/** Move one particle by dt seconds. `from` is where its streak starts; after a recycle it equals the new position. */
-export function stepParticle(p: Particle, st: WindState, scene: Scene, dt: number, rand: () => number): { p: Particle; from: [number, number] } {
+/**
+ * Move one particle by dt seconds. `from` is where its streak starts; after a recycle it equals the
+ * new position. `blades` gives each turbine's blade directions, in the scene's order; without it
+ * no air is energised.
+ */
+export function stepParticle(p: Particle, st: WindState, scene: Scene, dt: number, rand: () => number, blades?: readonly Blades[]): { p: Particle; from: [number, number] } {
   const [u, v] = wind(p.x, p.y, st);
   const k = STEP * (1 - WAKE_SLOWDOWN * p.e) * dt * 60;
   const x = p.x + u * k, y = p.y + v * k + (p.d ?? 0) * p.e * Math.abs(u * k);
@@ -46,8 +77,11 @@ export function stepParticle(p: Particle, st: WindState, scene: Scene, dt: numbe
   }
 
   let e = p.e * Math.exp(-dt / WAKE_FADE_S), d = p.d;
-  for (const t of scene.turbines) {
-    if (p.x < t.baseX && x >= t.baseX && Math.abs(y - t.hubY) < t.radius) { e = 1; d = (WAKE_SPREAD * (y - t.hubY)) / t.radius; }
+  if (blades) {
+    for (let i = 0; i < scene.turbines.length; i++) {
+      const t = scene.turbines[i]!, dy = y - t.hubY;
+      if (onBlade(x - t.baseX, dy, t.radius, t.scale, blades[i]!)) { e = 1; d = (WAKE_SPREAD * dy) / t.radius; }
+    }
   }
   return { p: d === undefined ? { x, y, e } : { x, y, e, d }, from: [p.x, p.y] };
 }

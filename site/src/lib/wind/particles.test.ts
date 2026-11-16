@@ -1,7 +1,7 @@
 import { contrast, palette } from '../palette';
 import { layout } from '../scene/layout';
 import { baseWind, type WindState } from './field';
-import { WAKE_SPREAD, seedParticles, stepParticle, streakColour } from './particles';
+import { WAKE_SPREAD, bladesAt, onBlade, seedParticles, stepParticle, streakColour } from './particles';
 
 const scene = layout(1440, 820);
 const near = scene.turbines[0]!;
@@ -17,20 +17,47 @@ test('a particle moves with the wind', () => {
   expect(from).toEqual([100, 100]);
 });
 
-test('crossing a rotor from the left energises it', () => {
-  expect(stepParticle({ x: near.baseX - 1, y: near.hubY, e: 0 }, still, scene, F, rand).p.e).toBe(1);
+// One blade straight down from the near hub (the other two up-left and up-right); the far turbines' blades likewise.
+const DOWN = scene.turbines.map(() => bladesAt(Math.PI / 2)), UP = scene.turbines.map(() => bladesAt(-Math.PI / 2));
+/** A particle that lands on the near rotor's vertical line, `dy` below the hub, this step. */
+const arrive = (dy: number, blades = dy >= 0 ? DOWN : UP) => stepParticle({ x: near.baseX - 1, y: near.hubY + dy, e: 0 }, still, scene, F, rand, blades).p;
+
+test('where the blades point', () => {
+  const b = bladesAt(Math.PI / 2);
+  expect(b[0]).toBeCloseTo(0, 9); expect(b[1]).toBeCloseTo(1, 9);                 // straight down the screen
+  expect(b[2]).toBeCloseTo(Math.cos(Math.PI / 2 + (2 * Math.PI) / 3), 9);
+  expect(Math.hypot(b[4], b[5])).toBeCloseTo(1, 9);
 });
 
-test('passing above or below the rotor does not', () => {
-  expect(stepParticle({ x: near.baseX - 1, y: near.hubY - near.radius - 5, e: 0 }, still, scene, F, rand).p.e).toBe(0);
-  expect(stepParticle({ x: near.baseX - 1, y: near.hubY + near.radius + 5, e: 0 }, still, scene, F, rand).p.e).toBe(0);
+test('a point is on a blade only along it, out to the tip, and the blade narrows', () => {
+  const b = bladesAt(0);                                  // one blade pointing right
+  expect(onBlade(50, 0, 100, 1, b)).toBe(true);
+  expect(onBlade(50, 6, 100, 1, b)).toBe(true);           // inside its width half way out
+  expect(onBlade(50, 20, 100, 1, b)).toBe(false);
+  expect(onBlade(95, 6, 100, 1, b)).toBe(false);          // the same offset misses near the thin tip
+  expect(onBlade(101, 0, 100, 1, b)).toBe(false);         // past the tip
+  expect(onBlade(-50, 0, 100, 1, b)).toBe(false);         // behind the hub there is no blade
+  expect(onBlade(0, 0, 100, 1, b)).toBe(true);            // the hub itself
 });
 
-test('moving right to left through a rotor does not', () => {
-  const back: WindState = { ...still, pointer: { x: near.baseX, y: near.hubY, vx: -40, vy: 0, active: true } };
-  const { p } = stepParticle({ x: near.baseX + 1, y: near.hubY, e: 0 }, back, scene, F, rand);
-  expect(p.x).toBeLessThan(near.baseX);
-  expect(p.e).toBe(0);
+test('air that meets a blade is energised', () => {
+  expect(arrive(near.radius / 2).e).toBe(1);
+  expect(arrive(-near.radius / 2).e).toBe(1);
+});
+
+test('air that passes between the blades stays plain', () => {
+  // The same point of the rotor, with no blade there: the blades point the other way.
+  expect(arrive(near.radius / 2, UP).e).toBe(0);
+  expect(arrive(-near.radius / 2, DOWN).e).toBe(0);
+});
+
+test('passing above or below the rotor does not energise', () => {
+  expect(arrive(-near.radius - 5, UP).e).toBe(0);
+  expect(arrive(near.radius + 5, DOWN).e).toBe(0);
+});
+
+test('without blade directions nothing is energised', () => {
+  expect(stepParticle({ x: near.baseX - 1, y: near.hubY, e: 0 }, still, scene, F, rand).p.e).toBe(0);
 });
 
 test('energy fades with a 1.18 s time constant', () => {
@@ -39,14 +66,13 @@ test('energy fades with a 1.18 s time constant', () => {
   expect(Math.abs(p.e - 1 / Math.E)).toBeLessThan(0.01);
 });
 
-test('the wake widens: air that crossed above the hub drifts up, below it drifts down', () => {
-  const cross = (dy: number) => stepParticle({ x: near.baseX - 1, y: near.hubY + dy, e: 0 }, still, scene, F, rand).p;
-  const above = cross(-near.radius / 2), below = cross(near.radius / 2), centre = cross(0);
+test('the wake widens: air that met a blade above the hub drifts up, below it drifts down', () => {
+  const above = arrive(-near.radius / 2), below = arrive(near.radius / 2), centre = arrive(0);
   expect(above.d!).toBeLessThan(0);
   expect(below.d!).toBeGreaterThan(0);
   expect(Math.abs(centre.d!)).toBeLessThan(0.02);
-  expect(Math.abs(cross(near.radius - 1).d!)).toBeLessThanOrEqual(WAKE_SPREAD);
-  // One more step: the drift is added on top of the wind, away from the hub line.
+  expect(Math.abs(arrive(near.radius - 1).d!)).toBeLessThanOrEqual(WAKE_SPREAD);
+  // One more step, with no blade in the way: the drift is added on top of the wind, away from the hub line.
   const plain = stepParticle({ x: above.x, y: above.y, e: above.e }, still, scene, F, rand).p;
   expect(stepParticle(above, still, scene, F, rand).p.y).toBeLessThan(plain.y);
   expect(stepParticle(below, still, scene, F, rand).p.y).toBeGreaterThan(stepParticle({ x: below.x, y: below.y, e: below.e }, still, scene, F, rand).p.y);

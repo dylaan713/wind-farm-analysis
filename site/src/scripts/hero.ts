@@ -6,7 +6,7 @@ import { frameBudget } from '../lib/perf';
 import { backHill, fitHeight, frontHill, layout, type Scene, type TurbinePose } from '../lib/scene/layout';
 import { leanTarget, stepSpring, type Spring } from '../lib/spring';
 import { burstAt, fireBurst, gust, movePointer, stepState, wind, type WindState } from '../lib/wind/field';
-import { seedParticles, stepParticle, streakColour, type Particle } from '../lib/wind/particles';
+import { bladesAt, seedParticles, stepParticle, streakColour, type Particle } from '../lib/wind/particles';
 import { AIR_LEVELS, airLevel, airShare, fadeStep, type Rect } from '../lib/zones';
 
 const TAU = Math.PI * 2;
@@ -272,8 +272,10 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
     xa.globalCompositeOperation = 'source-over'; xa.lineCap = 'round';
     for (const b of batches) b.length = 0;
     const unit = 1.7 * k || 1;
+    // Air takes colour where a blade meets it, so each turbine's blade directions are worked out once per frame.
+    const blades = rotors.map((r) => bladesAt(r.angle));
     for (let i = 0; i < particles.length; i++) {
-      const { p, from } = stepParticle(particles[i]!, state, scene, dt, Math.random);
+      const { p, from } = stepParticle(particles[i]!, state, scene, dt, Math.random, blades);
       particles[i] = p;
       if (streaksOff) continue;
       // Near text the air thins out in steps; behind the words themselves none is drawn.
