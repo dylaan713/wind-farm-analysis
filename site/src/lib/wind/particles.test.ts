@@ -1,6 +1,7 @@
+import { contrast, palette } from '../palette';
 import { layout } from '../scene/layout';
 import { baseWind, type WindState } from './field';
-import { seedParticles, stepParticle, streakColour } from './particles';
+import { WAKE_SPREAD, seedParticles, stepParticle, streakColour } from './particles';
 
 const scene = layout(1440, 820);
 const near = scene.turbines[0]!;
@@ -38,6 +39,27 @@ test('energy fades with a 1.18 s time constant', () => {
   expect(Math.abs(p.e - 1 / Math.E)).toBeLessThan(0.01);
 });
 
+test('the wake widens: air that crossed above the hub drifts up, below it drifts down', () => {
+  const cross = (dy: number) => stepParticle({ x: near.baseX - 1, y: near.hubY + dy, e: 0 }, still, scene, F, rand).p;
+  const above = cross(-near.radius / 2), below = cross(near.radius / 2), centre = cross(0);
+  expect(above.d!).toBeLessThan(0);
+  expect(below.d!).toBeGreaterThan(0);
+  expect(Math.abs(centre.d!)).toBeLessThan(0.02);
+  expect(Math.abs(cross(near.radius - 1).d!)).toBeLessThanOrEqual(WAKE_SPREAD);
+  // One more step: the drift is added on top of the wind, away from the hub line.
+  const plain = stepParticle({ x: above.x, y: above.y, e: above.e }, still, scene, F, rand).p;
+  expect(stepParticle(above, still, scene, F, rand).p.y).toBeLessThan(plain.y);
+  expect(stepParticle(below, still, scene, F, rand).p.y).toBeGreaterThan(stepParticle({ x: below.x, y: below.y, e: below.e }, still, scene, F, rand).p.y);
+});
+
+test('plain air has no drift, and the drift dies away with the energy', () => {
+  expect(stepParticle({ x: 100, y: 100, e: 0 }, still, scene, F, rand).p.d).toBeUndefined();
+  const a = stepParticle({ x: 100, y: 100, e: 1, d: 0.3 }, still, scene, F, rand).p;
+  const b = stepParticle({ x: 100, y: 100, e: 0, d: 0.3 }, still, scene, F, rand).p;
+  expect(a.y).toBeGreaterThan(b.y);
+  expect(b.y).toBeCloseTo(stepParticle({ x: 100, y: 100, e: 0 }, still, scene, F, rand).p.y, 9);
+});
+
 test('energised air is slower', () => {
   const a = stepParticle({ x: 100, y: 100, e: 0 }, still, scene, F, rand).p;
   const b = stepParticle({ x: 100, y: 100, e: 1 }, still, scene, F, rand).p;
@@ -64,12 +86,22 @@ test('travel is frame-rate independent', () => {
 });
 
 test('streak colour runs from air to signal', () => {
-  expect(streakColour(0, 0)).toMatchObject({ r: 24, g: 144, b: 255 });
-  expect(streakColour(1, 0)).toMatchObject({ r: 255, g: 91, b: 20 });
-  expect(streakColour(0.5, 0)).toMatchObject({ r: 140, g: 118, b: 138 });
+  expect(streakColour(0, 0)).toMatchObject({ r: 6, g: 132, b: 249 });
+  expect(streakColour(1, 0)).toMatchObject({ r: 245, g: 78, b: 0 });
+  expect(streakColour(0.5, 0)).toMatchObject({ r: 180, g: 109, b: 183 });
   expect(streakColour(0, 0).a).toBeCloseTo(0.3, 6);
   expect(streakColour(1, 5).a).toBeCloseTo(1, 6);
   expect(streakColour(1, 5).width).toBeCloseTo(2.4, 6);
+});
+
+test('a streak is never darker than plain air, whatever share of its energy is left', () => {
+  // Dark text sits straight on the moving air, so the air's darkest colour is what it must be readable on.
+  const air = streakColour(0, 0), airHex = `#${[air.r, air.g, air.b].map((c) => c.toString(16).padStart(2, '0')).join('')}`;
+  for (let e = 0; e <= 1.0001; e += 0.05) {
+    const c = streakColour(Math.min(1, e), 0), hex = `#${[c.r, c.g, c.b].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+    expect(contrast(palette.ink, hex), `energy ${e.toFixed(2)}`).toBeGreaterThanOrEqual(contrast(palette.ink, airHex) - 0.02);
+    expect(contrast(palette.ink, hex), `energy ${e.toFixed(2)}`).toBeGreaterThanOrEqual(4.5);
+  }
 });
 
 test('seeding is repeatable and inside the sky', () => {

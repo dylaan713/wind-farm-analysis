@@ -62,7 +62,7 @@ test.describe('the still drawing', () => {
       const box = (await still.boundingBox())!, vp = page.viewportSize()!;
       expect(box.width).toBeGreaterThanOrEqual(vp.width - 1);
       expect(box.height).toBeGreaterThanOrEqual(Math.min(vp.height, 540) - 1);
-      await expect(page.getByRole('img', { name: 'A sun low over two hills with three wind turbines' })).toBeVisible();
+      await expect(page.getByRole('img', { name: 'Three wind turbines on two hills, in moving air' })).toBeVisible();
     });
   });
 

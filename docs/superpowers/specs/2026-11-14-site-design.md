@@ -34,6 +34,66 @@ energy.*
 
 ## 2. Palette as roles
 
+> **Changed 2026-11-16, decided by Dylan from rendered candidates** (screenshots of the real first
+> screen in each palette and scene; kept on Dylan's machine, not in the repo).
+> Where this note and the text below it disagree, this note is what is built.
+>
+> - **The colours are tuned, not replaced.** Blue is still air and orange is still energy.
+>   Air `#0684F9`, signal `#F54E00`, surface `#EFF5FB`, third `#5A687D`, small orange text
+>   `#BD3C00`, far turbines `#34506F` (darker, by request). Two new roles: sky `#E4F1FE` (the air
+>   colour at 11% over the ground, the deepest the sky gets) and far hill `#C8E4FE` (22%).
+> - **There is no sun.** "The sun is the only warm thing on the page" no longer holds. Orange now
+>   appears only where energy is: the wake behind each rotor, the hubs, the energy travelling
+>   along the cable, the filled chapter links, and the headline word.
+> - **Less white.** The sky is tinted from the top down to the foot of the scene, the far hill
+>   and the ground are filled, and the ground fades to the page's white at the bottom.
+> - **No grass.** The ridge carries a cable from the near turbine to the left edge, with the
+>   energy shown as orange dots travelling along it.
+> - **More wind**: 520 streaks on a phone and 1,200 on a laptop (were 340 and 680), each with a
+>   longer trail. 700 on a phone scored 76 on Lighthouse mobile; 520 scores 100.
+> - **Wakes widen.** Air that crossed a rotor above the hub drifts up, below it drifts down, at
+>   four times the farm model's rate so it can be seen. The code says so.
+> - **Text sits on the moving air itself: no boxes.** Nothing is erased behind text and no air is
+>   held back from it. The hint line and the two readings are all in the dark text colour (grey
+>   and orange cannot sit on the air), and the air's colours are blended so that no streak is
+>   darker than the plain blue. A side effect: a wake fading from orange back to blue passes
+>   through pink-violet where it used to pass through a dull purple. During the demonstration
+>   gust the hint's bold words are underlined; they used to turn orange.
+> - **The top bar is unchanged**: a soft pale backing, and the one remaining patch where no air is
+>   drawn, behind the meter, whose number is orange. A solid bar was tried and rejected.
+> - **The headline word is no longer a calm zone.** The air runs up to its letters. Because
+>   orange and the air are equally bright, each letter is outlined 5 px outside its edge in the
+>   colour of the sky behind it, which hides the air only where it would touch a letter. The
+>   audit test for this word changed with it: it used to check every canvas pixel behind the
+>   word's box; it now reads a real screenshot and checks the pixels beside each letter, still
+>   at 3:1, still while the wind is pushed across it.
+> - **The meter's number uses the deep orange at every size**, because it sits on the sky.
+>
+> Contrast, computed by script on 2026-11-16 from `site/src/lib/palette.ts`:
+>
+> | Pair | Ratio |
+> |---|---|
+> | ink on ground | 18.75 |
+> | ink on surface | 17.07 |
+> | ink on sky | 16.35 |
+> | third on ground | 5.66 |
+> | third on surface | 5.15 |
+> | third on sky | 4.93 |
+> | ink on signal | 5.33 |
+> | ink on air | 5.07 |
+> | airDeep on ground | 5.90 |
+> | airDeep on surface | 5.37 |
+> | airDeep on sky | 5.15 |
+> | signalDeep on ground | 5.51 |
+> | signalDeep on surface | 5.02 |
+> | signalDeep on sky | 4.81 |
+> | signal on ground | 3.52 |
+> | signal on sky | 3.07 |
+> | air on ground | 3.70 |
+> | signal on air | 1.05 |
+>
+> Signal on air (1.05) stays banned for text and thin shapes.
+
 **The scheme is a complementary pair: blue and orange, opposite each other on the colour wheel**
 (approved by Dylan from the second mockup, 2026-11-14). Three rules follow from that choice.
 

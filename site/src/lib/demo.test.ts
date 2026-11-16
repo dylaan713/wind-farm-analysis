@@ -35,6 +35,6 @@ test('chapter fill', () => {
 });
 
 test('fewer particles on a phone', () => {
-  expect(particleCount(390)).toBe(340);
-  expect(particleCount(640)).toBe(680);
+  expect(particleCount(390)).toBe(520);
+  expect(particleCount(640)).toBe(1200);
 });
