@@ -123,6 +123,15 @@ def usable_months(
     return reasons.index[reasons.isna().to_numpy()], _excluded_list(reasons)
 
 
+def yearly_errors_pct(v: Validation) -> pd.Series:
+    """The calibrated model's error in each year it was compared, in percent, positive when the
+    model is above the farm: the months used in that year, modelled x calibration factor against
+    reported. All but the held-out year were used to fit the factor, so these flatter the model."""
+    used = v.table[v.table["used_for"] != "excluded"]
+    by_year = used.groupby(used["month"].str[:4].astype(int))[["modelled_mwh", "reported_mwh"]].sum()
+    return (by_year["modelled_mwh"] * v.calibration_factor / by_year["reported_mwh"] - 1.0) * 100.0
+
+
 def _pct_error(model_total: float, reported_total: float) -> float:
     return (model_total - reported_total) / reported_total * 100.0
 

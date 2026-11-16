@@ -5,7 +5,7 @@ import pytest
 
 from energy.validate import (
     ASSUMED_LOSSES, LOSS_AVAILABILITY, LOSS_ELECTRICAL, LOSS_ENVIRONMENTAL,
-    LOSS_TURBINE_PERFORMANCE, usable_months, validate,
+    LOSS_TURBINE_PERFORMANCE, usable_months, validate, yearly_errors_pct,
 )
 
 NAMEPLATE_MW = 78.0
@@ -186,3 +186,16 @@ def test_modelled_series_from_hourly_timestamps_lines_up():
     v = run(modelled.set_axis(stamps), reported, coverage.set_axis(stamps), flags)
     assert v.calibration_factor == pytest.approx(0.85)
     assert v.blind_months == 60
+
+
+def test_yearly_errors_of_the_calibrated_model():
+    modelled, reported, coverage, flags = series()
+    reported[reported.index.year == 2019] = 0.80 * modelled[modelled.index.year == 2019]
+    reported[reported.index.year == HOLDOUT] = 0.70 * modelled[modelled.index.year == HOLDOUT]
+    reported.loc["2020-03"] = 0.0                                   # excluded, so not counted
+    v = run(modelled, reported, coverage, flags)
+    errors = yearly_errors_pct(v)
+    assert list(errors.index) == [2018, 2019, 2020, 2021, 2022]
+    assert errors[HOLDOUT] == pytest.approx(v.annual_error_pct)
+    assert errors[2019] == pytest.approx((v.calibration_factor / 0.80 - 1) * 100)
+    assert errors[2020] == pytest.approx((v.calibration_factor / 0.85 - 1) * 100)

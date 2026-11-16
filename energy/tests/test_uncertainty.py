@@ -13,6 +13,16 @@ def test_sigma_model_has_a_floor():
     assert sigmas(yearly, -8.0)[1] == pytest.approx(0.08)      # a model that ran low counts the same
 
 
+def test_sigma_model_is_the_worst_year_not_the_held_out_one():
+    yearly = pd.Series([100.0, 110.0, 90.0])
+    errors = pd.Series([-2.89, -1.16, 3.83, 1.46], index=[2018, 2019, 2023, 2025])
+    assert sigmas(yearly, errors)[1] == pytest.approx(0.0383)
+    assert sigmas(yearly, pd.Series([-4.5, 1.0]))[1] == pytest.approx(0.045)
+    assert sigmas(yearly, pd.Series([-1.0, 2.0]))[1] == pytest.approx(0.03)     # the floor still holds
+    with pytest.raises(ValueError):
+        sigmas(yearly, pd.Series([1.0, float("nan")]))
+
+
 def test_sigma_iav_is_relative():
     # Mean 100; sample standard deviation exactly 6.
     yearly = pd.Series([94.0, 100.0, 106.0]) * 1000.0

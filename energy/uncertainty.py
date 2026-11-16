@@ -13,7 +13,7 @@ import pandas as pd
 
 SEED = 20261114
 DRAWS = 20_000
-MODEL_SIGMA_FLOOR = 0.03      # one good held-out year does not prove the model is that good
+MODEL_SIGMA_FLOOR = 0.03      # a run of good years does not prove the model is that good
 
 
 @dataclass(frozen=True)
@@ -25,18 +25,26 @@ class PValues:
     p99: float
 
 
-def sigmas(yearly_mwh: pd.Series, holdout_error_pct: float) -> tuple[float, float]:
+def sigmas(yearly_mwh: pd.Series, yearly_error_pct) -> tuple[float, float]:
     """(sigma_iav, sigma_model), both as shares of the mean year.
 
     sigma_iav is the standard deviation of the yearly totals over their mean (the sample
-    standard deviation, dividing by n - 1). sigma_model is the size of the held-out year's
-    error, never taken as less than 3%.
+    standard deviation, dividing by n - 1).
+
+    sigma_model is the calibrated model's worst year: the largest of its yearly errors, in
+    percent, over every year it was compared with the farm, and never less than 3%. The plan
+    first used the held-out year alone; one good year only shows the scaling held that once, so
+    the rule was widened (Dylan, 2026-11-16). It is still a statement about this farm given its
+    own record, not about how accurate the model is unscaled.
     """
     years = yearly_mwh.dropna()
     if len(years) < 2:
         raise ValueError(f"the year-to-year spread needs at least two years, got {len(years)}")
     sigma_iav = float(years.std(ddof=1) / years.mean())
-    sigma_model = max(MODEL_SIGMA_FLOOR, abs(holdout_error_pct) / 100.0)
+    errors = np.atleast_1d(np.asarray(yearly_error_pct, dtype=float))
+    if errors.size == 0 or np.isnan(errors).any():
+        raise ValueError("the model's yearly errors are missing")
+    sigma_model = max(MODEL_SIGMA_FLOOR, float(np.abs(errors).max()) / 100.0)
     return sigma_iav, sigma_model
 
 

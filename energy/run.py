@@ -16,7 +16,7 @@ from energy.farm import coverage, gross_table, hourly_power_kw, monthly_mwh, pow
 from energy.geometry import to_local_m
 from energy.turbine import Turbine, air_density, equivalent_speed, hub_speed, load_turbine
 from energy.uncertainty import p_values, sigmas
-from energy.validate import MIN_COVERAGE, validate
+from energy.validate import MIN_COVERAGE, validate, yearly_errors_pct
 
 EIA_PLANT_ID = 58692                      # Black Oak Getty, MN (docs/farm-selection.md)
 CURVE_FILE = Path("data/turbines/vestas-v110-2.0.csv")
@@ -73,7 +73,7 @@ def compute(
     if len(thin):
         raise ValueError(f"wind data is more than 2% missing in {list(thin)}")
     yearly_net = yearly_hours["sum"] / 1000.0 * v.calibration_factor
-    sigma_iav, sigma_model = sigmas(yearly_net, v.annual_error_pct)
+    sigma_iav, sigma_model = sigmas(yearly_net, yearly_errors_pct(v))
     p50 = float(yearly_net.mean())
 
     by_month = monthly.groupby(monthly.index.month).sum()
