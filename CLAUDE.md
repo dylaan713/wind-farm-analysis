@@ -17,11 +17,17 @@ Status 2026-11-14: the site's first screen is built (`site/`), the finance contr
 Status 2026-11-15: the farm is Black Oak Getty, MN. The single-turbine model and its power curve are
 built (`energy/turbine.py`, `data/turbines/`); the wake model is next (energy plan Task 4).
 
+Status 2026-11-16: energy plan Tasks 4 to 9 are built on stacked branches awaiting review and
+merge (pull requests #10 to #14, then the notes): wake, farm, validation, uncertainty and result
+files (`uv run python -m energy.run`), the TypeScript version (`core/src/energy/`), and draft study
+notes (`docs/notes/energy.md`, not yet checked by Dylan).
+
 ## Commands
 - **Site** (`cd site`): `npm run dev` · `npm run check` · `npm test` · `npm run build` · `npm run e2e`
   (Playwright, laptop and phone) · `npm run budget` · `npm run lighthouse`
 - **Core** (`cd core`): `npm test` · `npm run check`
-- **Energy** (repo root): `uv sync` once, then `uv run pytest energy` (no network; 57 passed on 2026-11-15)
+- **Energy** (repo root): `uv sync` once, then `uv run pytest energy` (no network; 124 passed on 2026-11-16) ·
+  `uv run python -m energy.run` (cached downloads to `data/results/`)
 - e2e needs Playwright's Chromium (`npx playwright install chromium`, free). Lighthouse needs Chrome installed.
 
 ## Definition of done for site changes
