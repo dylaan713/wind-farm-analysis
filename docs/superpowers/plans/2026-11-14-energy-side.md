@@ -57,10 +57,27 @@ power  = power curve at v_eq, linear between points;
 
 **Thrust.** If the turbine has a published thrust curve, use it. Otherwise derive it from the power curve with momentum theory:
 ```
-Cp = P / (0.5 × 1.225 × pi × r0^2 × v^3)             capped at 16/27
-solve Cp = 4a(1−a)^2 for a in [0, 1/3]               (bisection)
+Cp_grid  = P / (0.5 × 1.225 × pi × r0^2 × v^3)       from the electrical power curve
+Cp_rotor = Cp_grid / 0.78                            capped at 16/27
+solve Cp_rotor = 4a(1−a)^2 for a in [0, 1/3]         (bisection)
 Ct = 4a(1−a)                                         capped at 0.9
 ```
+**Why 0.78 (changed 2026-11-15, approved by Dylan).** Momentum theory describes an ideal rotor
+with no losses. Used directly on the electrical power curve it treats the electricity as all the
+energy the rotor took from the wind, and gives too little thrust. Measured on the 36 turbines in
+the Open Energy Platform library that publish both curves, the uncorrected thrust coefficient is
+about 0.53 between 5 and 9 m/s where the published one is about 0.79. Dividing by one efficiency
+closes most of that gap. The value was fitted on the 24 turbines from other makers (0.78) and
+tested on the 12 Vestas turbines: mean absolute error in Ct of 0.056 over 4 to 16 m/s, against
+0.185 uncorrected. 0.78 is **not** a drivetrain efficiency; it stands for everything between an
+ideal rotor and the grid (blade drag, tip losses, wake rotation, gearbox, generator, converter).
+**Known weakness:** it still gives too little thrust in light wind (0.32 low at 4 m/s, 0.15 low
+at 5 m/s), where little energy is made. Re-run with `uv run python -m energy.thrust_check`.
+`core/src/energy/` (Task 8) uses the same 0.78.
+**Credit and limit.** The 0.78 contains information from the Open Energy Platform wind turbine
+library, © Reiner Lemoine Institut, made available under the Open Database License (ODbL) 1.0.
+That licence is share-alike for the database itself, so its rows are never committed, not even
+as test samples; the credit goes wherever the number is published, the site included.
 
 **Wake of one upstream turbine on one downstream turbine** (Jensen/Park). With `x` the distance downwind and `c` the distance crosswind, both in metres, and `r0` the rotor radius:
 ```

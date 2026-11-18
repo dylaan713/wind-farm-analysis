@@ -1,0 +1,32 @@
+# model: Vestas V110-2.0
+# rated_kw: 2000
+# rotor_diameter_m: 110
+# source: System Advisor Model (SAM) wind turbine library, row "Vestas V110-2.0"
+# file: deploy/libraries/Wind Turbines.csv in https://github.com/NREL/SAM
+# commit: 784177b634fa1475fda6672b70595e087a238aea (branch develop)
+# retrieved: 2026-11-15
+# licence: BSD 3-Clause, Copyright (c) 2017, 2022 Alliance for Energy Innovation, LLC. Full text in data/turbines/NOTICE.md
+# changes: none to the numbers. The library's two arrays are written here as two columns.
+# note: the library gives power only, so thrust is derived in energy/turbine.py.
+# note: the point at 15.97 m/s reads 2002.09 kW; the model holds output at the 2000 kW rating.
+# note: the library does not say where its curve came from. See docs/farm-selection.md for the check against the maker's brochure.
+v_ms,power_kw
+2,0
+2.9999037,27.738222
+3.994556,142.14922
+5.003854,315.84906
+5.998087,550.9531
+6.9919233,900.3979
+8.000265,1349.3625
+8.993844,1772.9171
+9.98821,1969.9076
+10.998014,1997.5054
+11.993056,1999.693
+12.988106,1999.7632
+13.998007,1999.8345
+14.993056,1999.9047
+15.973247,2002.0913
+16.998005,2000.0463
+17.993055,2000.1165
+18.988104,2000.1866
+19.983154,2000.257

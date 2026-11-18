@@ -14,11 +14,14 @@ Status 2026-11-14: the site's first screen is built (`site/`), the finance contr
 (`core/`), the energy side has its data access and a farm shortlist (`energy/`,
 `docs/farm-selection.md`), and the finance model is not started.
 
+Status 2026-11-15: the farm is Black Oak Getty, MN. The single-turbine model and its power curve are
+built (`energy/turbine.py`, `data/turbines/`); the wake model is next (energy plan Task 4).
+
 ## Commands
 - **Site** (`cd site`): `npm run dev` · `npm run check` · `npm test` · `npm run build` · `npm run e2e`
   (Playwright, laptop and phone) · `npm run budget` · `npm run lighthouse`
 - **Core** (`cd core`): `npm test` · `npm run check`
-- **Energy** (repo root): `uv sync` once, then `uv run pytest energy` (no network; 25 passed on 2026-11-14)
+- **Energy** (repo root): `uv sync` once, then `uv run pytest energy` (no network; 57 passed on 2026-11-15)
 - e2e needs Playwright's Chromium (`npx playwright install chromium`, free). Lighthouse needs Chrome installed.
 
 ## Definition of done for site changes
@@ -49,6 +52,10 @@ accessibility 95). Measured 2026-11-14 on `site/polish` after the audit fixes: c
 
 ## Hard rules
 - Free only. No paid tiers, trials needing a card, or metered API keys.
+- **Legally usable only.** Before a data source or library is used, its licence is read from its
+  own pages and recorded in `docs/data-sources.md` with what it obliges. No rows from a share-alike
+  source (the Open Energy Platform turbine library, ODbL) are committed, not even as test samples.
+  (Dylan, 2026-11-15.)
 - **Dylan manages this repo and does all merging.** Everyone else, and any agent working for them,
   works on a branch, pushes it, opens a pull request and stops there. Never merge a pull request,
   never push or commit to `main`, never force-push, never delete a branch you did not create, and
