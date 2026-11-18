@@ -126,7 +126,13 @@ For B, report on the held-out year only: annual error %, monthly mean absolute %
 long-term series  = model run on every full year from 2000 with today's layout and calibration_factor
 P50               = mean of that series
 sigma_iav         = standard deviation of yearly totals / P50          (year-to-year wind)
-sigma_model       = max(0.03, |held-out annual error|)                 (floor of 3%)
+sigma_model       = max(0.03, largest |yearly error of the calibrated model|)   (floor of 3%)
+                    over every year compared with the farm, the held-out year included.
+                    Changed 2026-11-16, approved by Dylan: it was the held-out year's error alone.
+                    One good held-out year only shows the scaling held that once; the blind
+                    result shows the unscaled model can be far off. All but one of these years
+                    fitted the factor, so even this flatters the model. It describes this farm
+                    given its own record.
 1-year sigma      = sqrt(sigma_iav^2 + sigma_model^2)
 10-year sigma     = sqrt(sigma_iav^2 / 10 + sigma_model^2)
 Monte Carlo: 20,000 draws of P50 × (1 + e_iav) × (1 + e_model), normal errors, fixed seed 20261114
@@ -491,7 +497,7 @@ Add `nameplate_mw: float` to `usable_months` and `validate` as the test requires
 SEED = 20261114; DRAWS = 20_000
 @dataclass(frozen=True)
 class PValues: p50: float; p75: float; p90: float; p99: float
-def sigmas(yearly_mwh: pd.Series, holdout_error_pct: float) -> tuple[float, float]      # (sigma_iav, sigma_model)
+def sigmas(yearly_mwh: pd.Series, yearly_error_pct) -> tuple[float, float]             # (sigma_iav, sigma_model); errors for every compared year
 def p_values(p50: float, sigma_iav: float, sigma_model: float, years: int = 1) -> PValues
 
 # export.py
@@ -504,7 +510,7 @@ def write_all(out_dir: Path = Path("data/results")) -> None
 - [ ] **Step 1: Write the failing tests.**
 
 ```python
-def test_sigma_model_has_a_floor():        # holdout error 1.0% -> sigma_model == 0.03; 8.0% -> 0.08
+def test_sigma_model_has_a_floor():        # worst yearly error 1.0% -> sigma_model == 0.03; 8.0% -> 0.08
 def test_sigma_iav_is_relative():          # yearly totals with mean 100 and std 6 -> 0.06
 def test_p_values_are_ordered():           # p50 > p75 > p90 > p99
 def test_p_values_match_the_normal_case():
