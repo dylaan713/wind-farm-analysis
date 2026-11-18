@@ -33,14 +33,19 @@ accessibility 95). Measured 2026-11-14 on `site/polish` after the audit fixes: c
   only reads input and draws. Tool math comes from `core/` through the `@core` alias.
 - The first-screen meter and turbines are a demo and are labeled so. No sample figures ship. The
   wind, output and energy shown all describe the one near turbine, so the numbers agree; the other
-  two turbines only add to the sun's glow.
+  two turbines are scenery. There is no sun: orange appears only where energy is (Dylan, 2026-11-16).
 - Per-frame drawing is kept cheap on purpose (see the layer comment in `scripts/hero.ts`): the
   first version scored 71 on Lighthouse mobile until the hills were made static, the air canvas
   dropped to one pixel per CSS pixel, and the top bar's backdrop blur was removed.
 - `index.astro` carries `noindex` while the repo is private. Remove it at launch.
-- **Text over the scene sits in a calm zone** (`data-calm`): no air is drawn behind it and the sky tint
-  is erased there. The orange headline word is only 3.11:1 on pure white, so anything behind it fails
-  it. `e2e/audit.spec.ts` samples the canvas behind each piece of text and fails if contrast drops.
+- **Text over the scene sits straight on the moving air; there are no clear patches behind it**
+  (Dylan, 2026-11-16: no boxes). That only works because of three things, each held by a test:
+  small text over the scene is the dark text colour, never grey or orange; a streak is never darker
+  than the plain air colour (`lib/wind/particles.ts` blends in linear light); and the orange headline
+  word keeps a sky-coloured margin around each letter, because orange and the air are equally
+  bright. `e2e/audit.spec.ts` samples the canvas behind the small text and, on a real screenshot,
+  the pixels beside each letter of the headline word. The one calm zone left (`lib/zones.ts`) is
+  behind the meter in the top bar, whose number is orange.
 - The air fades by mixing toward white plus one whole level a frame (`lib/zones.ts`), so nothing is
   left behind. A plain percentage fade leaves a visible residue.
 - `e2e/audit.spec.ts` holds one test per defect the 2026-11-14 audits found. Keep it passing.

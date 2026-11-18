@@ -19,15 +19,15 @@ const letters = (s: string) => [...s].map((ch) => (ch === ' ' ? ' ' : ch));
     <h1 class="display" aria-label={full}>
       <span class="line" aria-hidden="true">{letters(l1).map((ch) => <span data-lean>{ch}</span>)}</span>
       <span class="line" aria-hidden="true">
-        {letters(l2 + ' ').map((ch) => <span data-lean>{ch}</span>)}<span class="energy" data-calm>{letters(l3).map((ch) => <span data-lean>{ch}</span>)}</span>
+        {letters(l2 + ' ').map((ch) => <span data-lean>{ch}</span>)}<span class="energy" data-clear>{letters(l3).map((ch) => <span data-lean>{ch}</span>)}</span>
       </span>
     </h1>
     <!-- Shown when the scene is live: it tells the visitor what they can do. -->
-    <p class="sub sub-live" data-calm data-arrive>{site.hint.lead} <b>{site.hint.emph}</b> {site.hint.tail}</p>
+    <p class="sub sub-live" data-clear data-hint data-arrive>{site.hint.lead} <b>{site.hint.emph}</b> {site.hint.tail}</p>
     <!-- Shown when it is not (JavaScript off, or reduced motion): nothing here would respond. -->
     <p class="sub sub-still">{site.still}</p>
 
-    <dl class="readouts" data-readouts data-calm>
+    <dl class="readouts" data-readouts data-clear>
       <div><dt class="label">{site.readouts.wind}</dt><dd class="num" data-read-wind>00.0 m/s</dd></div>
       <div><dt class="label">{site.readouts.output}</dt><dd class="num" data-read-output>0 kW</dd></div>
     </dl>
@@ -62,24 +62,29 @@ const letters = (s: string) => [...s].map((ch) => (ch === ' ' ? ' ' : ch));
   /* Once the first live frame is painted the still drawing steps aside. */
   :global(html.live) .still { visibility: hidden; }
   .scene :global(canvas) { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-  .scene :global([data-layer='sun']) { position: absolute; border-radius: 50%; background: var(--signal); will-change: transform; }
-  .scene :global([data-layer='glow']) {
-    position: absolute; border-radius: 50%; opacity: 0; pointer-events: none; will-change: transform, opacity;
-    background: radial-gradient(circle, var(--signal) 27%, color-mix(in srgb, var(--signal) 0%, transparent) 70%);
-  }
 
   .copy { position: absolute; inset: clamp(84px, 16svh, 160px) 0 auto 0; pointer-events: none; }
   h1 { white-space: nowrap; }
   .line { display: block; }
   .line span[data-lean] { display: inline-block; transform-origin: 50% 100%; will-change: transform; }
-  /* The orange word sits on clear white (no tint, no air behind it) and carries a ground-coloured
-     halo. Orange on white is 3.11:1, only just enough for large text, so nothing may dim what is behind it. */
-  .energy { color: var(--signal); text-shadow: 0 0 2px var(--ground), 0 0 12px var(--ground); }
+  /* The air runs right up to the orange word and stops at its letters, not at a box around it.
+     Orange and the air are equally bright, so a streak must never touch a letter: each letter is
+     outlined, 5px outside its edge, in the colour of the sky behind the word. The outline cannot be
+     seen against the sky; it only covers the air where the air would reach the letter. The script
+     sets --word-sky to the sky's exact colour at the word; the fallback is close to it. */
+  .energy {
+    color: var(--signal); paint-order: stroke fill;
+    -webkit-text-stroke: 10px var(--word-sky, color-mix(in srgb, var(--air) 7%, var(--ground)));
+  }
 
-  .sub { margin-top: clamp(14px, 2vw, 26px); max-width: 34ch; width: fit-content; color: var(--third); font-size: clamp(15px, 1.5vw, 19px); }
-  .sub b { color: var(--ink); font-weight: 600; transition: color 0.3s ease; }
-  /* While the page demonstrates a gust by itself, the words that explain it light up. */
-  :global(html.hinting) .sub b { color: var(--signal-deep); }
+  /* The small text over the scene is dark, and the air passes straight behind it: dark text is
+     readable on the air at its strongest (palette.ts and particles.test.ts hold that), so there is
+     no clear patch and no box. Grey or orange text could not sit here. */
+  .sub { margin-top: clamp(14px, 2vw, 26px); max-width: 34ch; width: fit-content; color: var(--ink); font-size: clamp(15px, 1.5vw, 19px); }
+  .sub b { font-weight: 700; text-decoration: underline transparent 2px; text-underline-offset: 0.22em; transition: text-decoration-color 0.3s ease; }
+  /* While the page demonstrates a gust by itself, the words that explain it are underlined. */
+  :global(html.hinting) .sub b { text-decoration-color: var(--ink); }
+  .readouts :global(.label) { color: var(--ink); }
   /* Which of the two lines shows depends on whether the scene can be live at all. */
   .sub-live { display: none; }
   :global(html.motion) .sub-live { display: block; }

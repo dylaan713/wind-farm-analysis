@@ -36,9 +36,8 @@ import { site } from '../content/site';
   .name { transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
   .name:hover { color: var(--air-deep); }
   .value { font-weight: 700; font-size: clamp(18px, 2.4vw, 30px); }
-  .value b { color: var(--signal); font-weight: 700; }
-  /* Small orange text fails contrast on white; below 24px the number uses the deep orange. */
-  @media (max-width: 899px) { .value b { color: var(--signal-deep); } }
+  /* The number sits on the sky's tint, where the bright orange is short of 3:1; it uses the deep orange at every size. */
+  .value b { color: var(--signal-deep); font-weight: 700; }
   /* On a phone the label and the number share a line, so the demo note still fits under them. */
   @media (max-width: 639px) {
     :global(html.live) .meter { grid-template-columns: auto auto; column-gap: 8px; align-items: baseline; }

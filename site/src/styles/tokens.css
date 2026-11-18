@@ -2,13 +2,15 @@
 :root {
   --ground: #FFFFFF;
   --ink: #0A1220;
-  --surface: #E6F1FC;
-  --air: #1890FF;
-  --signal: #FF5B14;
-  --third: #5C6B80;
+  --surface: #EFF5FB;
+  --air: #0684F9;
+  --signal: #F54E00;
+  --third: #5A687D;
   --air-deep: #0B62C4;
-  --signal-deep: #C2410C;
-  --far-turbine: #7FA6CC;
+  --signal-deep: #BD3C00;
+  --far-turbine: #34506F;
+  --sky: #E4F1FE;
+  --hill-far: #C8E4FE;
 
   --font-display: 'Mona Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-num: 'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;

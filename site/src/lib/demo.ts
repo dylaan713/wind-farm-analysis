@@ -37,5 +37,5 @@ export function chapterFill(kwh: number): [number, number, number, number] {
 }
 
 export function particleCount(w: number): number {
-  return w < 640 ? 340 : 680;
+  return w < 640 ? 520 : 1200;
 }

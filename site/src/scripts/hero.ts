@@ -1,20 +1,22 @@
 // The live first screen. All the numbers come from pure functions in src/lib; this file
 // only reads input, keeps time, and draws.
 import { addEnergy, chapterFill, demoPowerKw, particleCount, shownSpeed } from '../lib/demo';
-import { palette, rgb } from '../lib/palette';
+import { SKY_TINT, mix, palette, rgb } from '../lib/palette';
 import { frameBudget } from '../lib/perf';
 import { backHill, fitHeight, frontHill, layout, type Scene, type TurbinePose } from '../lib/scene/layout';
 import { leanTarget, stepSpring, type Spring } from '../lib/spring';
 import { burstAt, fireBurst, gust, movePointer, stepState, wind, type WindState } from '../lib/wind/field';
-import { seedParticles, stepParticle, streakColour, type Particle } from '../lib/wind/particles';
+import { bladesAt, seedParticles, stepParticle, streakColour, type Particle } from '../lib/wind/particles';
 import { AIR_LEVELS, airLevel, airShare, fadeStep, type Rect } from '../lib/zones';
 
 const TAU = Math.PI * 2;
 const rgba = (hex: string, a: number) => { const [r, g, b] = rgb(hex); return `rgba(${r},${g},${b},${a})`; };
 
 const HOLD_SECONDS = 0.9, HOLD_SLOP_PX = 10, MAX_DPR = 2;
-const SKY_TINT = 0.13, TURBINE_EASE = 0.12, FULL_GLOW_KW = 10200;
-const ARRIVAL_SECONDS = 1.2, ZONE_FEATHER = 72, ZONE_PAD = 5, TRAIL_FADE = 0.08;
+const TURBINE_EASE = 0.12;
+const ARRIVAL_SECONDS = 1.2, ZONE_FEATHER = 18, ZONE_PAD = 5, TRAIL_FADE = 0.055;
+/** The cable along the ridge: its thickness, and the dots of energy that travel along it. */
+const CABLE_PX = 4, PULSES = 9, PULSE_R = 4.5, PULSE_TAIL = 16;
 /** If nobody has touched anything this long after the arrival, one gust fires by itself to show what is possible. */
 const DEMO_GUST_AFTER_S = 2.5, DEMO_GUST_STRENGTH = 0.85, HINT_MS = 1800;
 /** The spoken summary is only updated once the visitor has stopped pushing for this long. */
@@ -40,23 +42,18 @@ export function startHero(root: HTMLElement): () => void {
 function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
   const html = document.documentElement;
 
-  // Six layers, bottom to top. Only the first and last are redrawn every frame.
+  // Four layers, bottom to top. Only the first and last are redrawn every frame.
   //   air    white, with the moving streaks. One canvas pixel per CSS pixel: it is soft by
   //          nature, and that is a quarter of the pixels to touch on a phone. It fades by a
   //          fixed step toward pure white, so a streak leaves nothing behind.
-  //   sky    the blue tint and the sun's wide halo, painted once per resize, with a clear
-  //          patch behind each piece of text.
-  //   sun    a CSS disc, moved by the compositor during the arrival.
-  //   glow   the sun's reactive halo: a CSS gradient, faded and scaled by the compositor.
-  //   hills  both ridges and the near turbine's shadow, painted once per resize.
-  //   top    turbines, grass, energy pulses, gust rings.
+  //   sky    the blue tint, deepest at the top, painted once per resize.
+  //   hills  both ridges, the cable and the near turbine's shadow, painted once per resize.
+  //   top    turbines, the energy travelling along the cable, gust rings.
   const air = document.createElement('canvas'), sky = document.createElement('canvas');
   const hills = document.createElement('canvas'), land = document.createElement('canvas');
-  const sunEl = document.createElement('div'), glowEl = document.createElement('div');
-  const layers: [HTMLElement, string][] = [[air, 'air'], [sky, 'sky'], [sunEl, 'sun'], [glowEl, 'glow'], [hills, 'hills'], [land, 'top']];
+  const layers: [HTMLElement, string][] = [[air, 'air'], [sky, 'sky'], [hills, 'hills'], [land, 'top']];
   for (const [el, name] of layers) { el.dataset.layer = name; el.setAttribute('aria-hidden', 'true'); sceneEl.appendChild(el); }
   const xa = air.getContext('2d')!, xs = sky.getContext('2d')!, xh = hills.getContext('2d')!, xl = land.getContext('2d')!;
-  const shownGlow = { opacity: '', transform: '' };
   // Streaks are drawn in a handful of batches (by energy, speed and nearness to text), not one path each.
   const E_STEPS = 5, PER_E = 2 * AIR_LEVELS, batches: number[][] = Array.from({ length: (E_STEPS + 1) * PER_E }, () => []);
   let airClip: Path2D | null = null;
@@ -69,23 +66,26 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
   const fills = [...root.querySelectorAll<HTMLElement>('[data-chip-fill]')];
   const chipsEl = root.querySelector<HTMLElement>('[data-chips]');
   const calmEls = [...root.querySelectorAll<HTMLElement>('[data-calm]')];
+  // Text the turbines must stand clear of: the calm zones, and everything marked data-clear (the
+  // headline word, the hint and the readings), which the air passes behind.
+  const clearEls = [...root.querySelectorAll<HTMLElement>('[data-calm], [data-clear]')];
   const letters: Letter[] = [...root.querySelectorAll<HTMLElement>('[data-lean]')].map((el) => ({ el, spring: { value: 0, velocity: 0 }, cx: 0, cy: 0, shown: '' }));
   const shown = { meter: '', wind: '', out: '', fills: ['', '', '', ''] };
   const coarse = window.matchMedia('(pointer: coarse)').matches;
 
-  let scene: Scene = layout(1, 1), W = 1, H = 1, dpr = 1, zones: Rect[] = [];
+  let scene: Scene = layout(1, 1), W = 1, H = 1, dpr = 1, zones: Rect[] = [], hint: Rect | null = null;
   let state: WindState = { t: 0, w: 1, s: 1, pointer: { x: 0, y: 0, vx: 0, vy: 0, active: false }, bursts: [] };
   let particles: Particle[] = [], rotors: Rotor[] = [];
-  // nearKw is the one turbine the readings describe; totalKw (all three) only drives the sun's glow.
-  let kwh = 0, nearKw = 0, totalKw = 0, pulse = 0, charge = 0;
+  // nearKw is the one turbine every reading describes.
+  let kwh = 0, nearKw = 0, pulse = 0, charge = 0;
   let downId: number | null = null, holding = false, downX = 0, downY = 0;
   let mouseIn = false, mouseX = 0, mouseY = 0, afterScroll = false;
   let inView = true, visible = document.visibilityState !== 'hidden', raf = 0, last = 0, painted = false, halved = false;
   let touched = false, lastInputAt = 0, demoGustDone = false, hintTimer = 0;
   let spokenKwh = 0, summaryPending = false, streaksOff = false;
   const budget = frameBudget();
-  // The sun rises once, on the visit's first screen; it starts below the ridge and eases up.
-  let arrival = html.classList.contains('arriving') ? 0 : 1, arrivedAt = arrival === 1 ? 0 : Infinity, sunDrop = 0;
+  // The arrival happens once, on the visit's first screen: the headline moves into place, then the page is measured.
+  let arrival = html.classList.contains('arriving') ? 0 : 1, arrivedAt = arrival === 1 ? 0 : Infinity;
   const running = () => inView && visible;
 
   function size() {
@@ -103,7 +103,7 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
     // Text that sits over a turbine's sweep: the turbines are shortened to stay under it.
     const free = layout(W, sceneH);
     let clearBelow = 0;
-    for (const el of calmEls) {
+    for (const el of clearEls) {
       const b = el.getBoundingClientRect();
       if (!b.width) continue;
       const left = b.left - r.left, right = b.right - r.left, bottom = el.offsetTop + el.offsetHeight + (el.offsetParent as HTMLElement | null ?? root).offsetTop;
@@ -115,14 +115,10 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
     const want = Math.round(particleCount(W) / (halved ? 2 : 1));
     if (particles.length !== want) particles = seedParticles(want, W, scene.h, Math.random);
 
-    if (arrival < 1) sunDrop = (1 - arrival) ** 3 * scene.sun.r * 2.4;
     measure();
     xa.globalCompositeOperation = 'source-over'; xa.fillStyle = palette.ground; xa.fillRect(0, 0, W, H);
     paintSky();
     paintHills();
-    const { sun } = scene, d = sun.r * 6.2;
-    Object.assign(sunEl.style, { width: `${sun.r * 2}px`, height: `${sun.r * 2}px`, left: `${sun.x - sun.r}px`, top: `${sun.y - sun.r}px`, transform: `translateY(${sunDrop.toFixed(1)}px)` });
-    Object.assign(glowEl.style, { width: `${d}px`, height: `${d}px`, left: `${sun.x - d / 2}px`, top: `${sun.y - d / 2}px` });
     armDprWatch();
   }
 
@@ -135,6 +131,14 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
       l.cx = b.left - r.left + b.width / 2; l.cy = b.top - r.top + b.height / 2;
     }
     const box = (b: DOMRect, pad: number, dy = 0): Rect => ({ x: b.left - r.left - pad, y: b.top - r.top - pad + dy, w: b.width + pad * 2, h: b.height + pad * 2 });
+    const hb = root.querySelector<HTMLElement>('[data-hint]')?.getBoundingClientRect();
+    hint = hb && hb.width > 0 ? box(hb, 0) : null;
+    // The headline word's letters are outlined in the sky's colour where the word sits (see Hero.astro).
+    const word = root.querySelector<HTMLElement>('h1 [data-clear]')?.getBoundingClientRect();
+    if (word && word.height > 0) {
+      const depth = Math.max(0, 1 - (word.top - r.top + word.height / 2) / scene.h);
+      root.style.setProperty('--word-sky', mix(palette.ground, palette.air, SKY_TINT * depth));
+    }
     zones = calmEls.map((el) => el.getBoundingClientRect()).filter((b) => b.width > 0 && b.height > 0).map((b) => box(b, ZONE_PAD));
     // The meter is fixed to the viewport; place its zone where it sits when the page is at the top.
     const mb = meterBox?.getBoundingClientRect();
@@ -145,22 +149,15 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
     for (const z of zones) airClip.rect(z.x, z.y, z.w, z.h);
   }
 
-  /** The still part of the sky: a blue tint from the top and the sun's wide halo, cleared behind text. */
+  /** The still part of the sky: a blue tint, deepest at the top and gone at the foot of the scene. Text sits straight on it. */
   function paintSky() {
-    xs.globalCompositeOperation = 'source-over'; xs.shadowBlur = 0; xs.clearRect(0, 0, W, H);
-    const tint = xs.createLinearGradient(0, 0, 0, scene.h * 0.72);
+    xs.clearRect(0, 0, W, H);
+    const tint = xs.createLinearGradient(0, 0, 0, scene.h);
     tint.addColorStop(0, rgba(palette.air, SKY_TINT)); tint.addColorStop(1, rgba(palette.air, 0));
     xs.fillStyle = tint; xs.fillRect(0, 0, W, H);
-    const { sun } = scene, halo = xs.createRadialGradient(sun.x, sun.y, 0, sun.x, sun.y, Math.max(W, scene.h) * 0.5);
-    halo.addColorStop(0, rgba(palette.signal, 0.2)); halo.addColorStop(0.3, rgba(palette.signal, 0.05)); halo.addColorStop(1, rgba(palette.signal, 0));
-    xs.fillStyle = halo; xs.fillRect(0, 0, W, H);
-    // Erase the tint behind each piece of text, with a soft edge.
-    xs.globalCompositeOperation = 'destination-out'; xs.fillStyle = palette.ink; xs.shadowColor = palette.ink; xs.shadowBlur = ZONE_FEATHER;
-    for (const z of zones) for (let i = 0; i < 2; i++) xs.fillRect(z.x, z.y, z.w, z.h);
-    xs.globalCompositeOperation = 'source-over'; xs.shadowBlur = 0;
   }
 
-  function hill(fn: (x: number, h: number) => number, fill: string, stroke: string, lw: number) {
+  function hill(fn: (x: number, h: number) => number, fill: string | CanvasGradient, stroke: string, lw: number) {
     const h = scene.h;
     xh.beginPath(); xh.moveTo(0, H);
     for (let x = 0; x <= W; x += 8) xh.lineTo(x, fn(x, h));
@@ -172,14 +169,23 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
 
   function paintHills() {
     xh.clearRect(0, 0, W, H);
-    hill(backHill, palette.surface, rgba(palette.air, 0.55), 1);
-    hill(frontHill, palette.ground, palette.ink, 1.75);
-    // Warm light, cool shadow: the near turbine's shadow falls away from the sun, in the air colour.
-    const n = scene.turbines[0]!, sx = n.baseX + (n.baseX - scene.sun.x) * 1.3, sy = n.baseY + Math.min(W * 0.3, 260) * 0.3;
+    hill(backHill, palette.hillFar, rgba(palette.air, 0.55), 1);
+    // The ground is a pale blue that runs out to the page's white, so the first screen has no hard lower edge.
+    const ground = xh.createLinearGradient(0, 0, 0, H);
+    ground.addColorStop(0.8, palette.surface); ground.addColorStop(1, palette.ground);
+    hill(frontHill, ground, palette.ink, 1.75);
+    const n = scene.turbines[0]!, h = scene.h;
+    // Cool shadow: the near turbine's shadow falls away from the light, in the air colour.
+    const sx = n.baseX + (n.baseX - scene.light.x) * 1.3, sy = n.baseY + Math.min(W * 0.3, 260) * 0.3;
     const shade = xh.createLinearGradient(n.baseX, n.baseY, sx, sy);
     shade.addColorStop(0, rgba(palette.air, 0.28)); shade.addColorStop(1, rgba(palette.air, 0));
     xh.strokeStyle = shade; xh.lineWidth = 9; xh.lineCap = 'round';
     xh.beginPath(); xh.moveTo(n.baseX, n.baseY + 4); xh.lineTo(sx, sy); xh.stroke();
+    // The cable: the near turbine's energy leaves along the ridge, from its base to the left edge.
+    xh.strokeStyle = palette.ink; xh.lineWidth = CABLE_PX; xh.lineJoin = 'round';
+    xh.beginPath(); xh.moveTo(n.baseX, frontHill(n.baseX, h));
+    for (let x = Math.floor(n.baseX / 8) * 8; x >= -8; x -= 8) xh.lineTo(x, frontHill(Math.max(0, x), h));
+    xh.stroke();
   }
 
   // ---- input -------------------------------------------------------------
@@ -266,8 +272,10 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
     xa.globalCompositeOperation = 'source-over'; xa.lineCap = 'round';
     for (const b of batches) b.length = 0;
     const unit = 1.7 * k || 1;
+    // Air takes colour where a blade meets it, so each turbine's blade directions are worked out once per frame.
+    const blades = rotors.map((r) => bladesAt(r.angle));
     for (let i = 0; i < particles.length; i++) {
-      const { p, from } = stepParticle(particles[i]!, state, scene, dt, Math.random);
+      const { p, from } = stepParticle(particles[i]!, state, scene, dt, Math.random, blades);
       particles[i] = p;
       if (streaksOff) continue;
       // Near text the air thins out in steps; behind the words themselves none is drawn.
@@ -289,12 +297,6 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
     }
     xa.restore();
 
-    // The sun answers the farm: more output, more glow. Only opacity and transform change.
-    const glow = Math.min(1, totalKw / FULL_GLOW_KW);
-    const opacity = (0.1 + 0.38 * glow).toFixed(2), transform = `translateY(${sunDrop.toFixed(1)}px) scale(${((1.5 + 1.6 * glow) / 3.1).toFixed(3)})`;
-    if (opacity !== shownGlow.opacity) glowEl.style.opacity = shownGlow.opacity = opacity;
-    if (transform !== shownGlow.transform) glowEl.style.transform = shownGlow.transform = transform;
-
     xl.clearRect(0, 0, W, H);
     for (const b of state.bursts) {
       xl.strokeStyle = rgba(palette.air, 0.35 * Math.max(0, 1 - b.r / (1.1 * W))); xl.lineWidth = 2;
@@ -302,25 +304,21 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
     }
 
     const [near, farA, farB] = rotors as [Rotor, Rotor, Rotor], n = near.pose, h = scene.h;
-    let total = turbine(farA, palette.farTurbine, k) + turbine(farB, palette.farTurbine, k);
+    turbine(farA, palette.farTurbine, k); turbine(farB, palette.farTurbine, k);
+    nearKw = turbine(near, palette.ink, k);
 
-    // Grass on the ridge bends with the air above it.
-    xl.strokeStyle = rgba(palette.ink, 0.6); xl.lineWidth = 1; xl.beginPath();
-    for (let x = 6; x < W; x += 11) {
-      const y = frontHill(x, h), [u] = wind(x, y - 30, state), len = 9 + ((x * 7) % 9), bend = Math.max(-14, Math.min(14, (u - 1.55) * 5 + 2.5));
-      xl.moveTo(x, y); xl.quadraticCurveTo(x + bend * 0.3, y - len * 0.6, x + bend, y - len);
+    // Energy leaves the turbine along the cable, faster when there is more of it: dots, each with a short tail.
+    pulse += dt * (40 + nearKw * 0.27);
+    xl.strokeStyle = palette.signal; xl.lineWidth = PULSE_R * 0.5; xl.lineCap = 'round'; xl.beginPath();
+    for (let i = 0; i < PULSES; i++) {
+      const x = n.baseX - ((pulse + (i * n.baseX) / PULSES) % n.baseX), tail = Math.min(n.baseX, x + PULSE_TAIL);
+      xl.moveTo(x, frontHill(x, h)); xl.lineTo(tail, frontHill(tail, h));
     }
     xl.stroke();
-
-    nearKw = turbine(near, palette.ink, k);
-    total += nearKw;
-    totalKw = total;
-
-    // Energy leaves the turbine along the ground, faster when there is more of it.
-    pulse += dt * (40 + nearKw * 0.27); xl.fillStyle = palette.signal;
-    for (let i = 0; i < 9; i++) {
-      const x = n.baseX - ((pulse + (i * n.baseX) / 9) % n.baseX);
-      xl.beginPath(); xl.arc(x, frontHill(x, h), 3.6, 0, TAU); xl.fill();
+    xl.fillStyle = palette.signal;
+    for (let i = 0; i < PULSES; i++) {
+      const x = n.baseX - ((pulse + (i * n.baseX) / PULSES) % n.baseX);
+      xl.beginPath(); xl.arc(x, frontHill(x, h), PULSE_R, 0, TAU); xl.fill();
     }
 
     if (holding) {
@@ -362,7 +360,7 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
   /** Nobody has touched anything: send one gust from under the hint, and point at the words that explain it. */
   function demoGust() {
     demoGustDone = true;
-    const z = zones[1] ?? zones[0]; // the hint line, when it is on screen
+    const z = hint; // the hint line, when it is on screen
     const x = z ? z.x + z.w * 0.45 : W * 0.3, y = z ? Math.min(scene.h * 0.6, z.y + z.h + 46) : scene.h * 0.4;
     state = burstAt(state, x, y, DEMO_GUST_STRENGTH);
     html.classList.add('hinting');
@@ -380,8 +378,6 @@ function run(root: HTMLElement, sceneEl: HTMLElement): () => void {
     state = stepState(state, dt);
     if (arrival < 1) {
       arrival = Math.min(1, arrival + dt / ARRIVAL_SECONDS);
-      sunDrop = (1 - arrival) ** 3 * scene.sun.r * 2.4;
-      sunEl.style.transform = `translateY(${sunDrop.toFixed(1)}px)`;
       if (arrival === 1) { arrivedAt = state.t; measure(); paintSky(); } // the headline has finished moving into place
     }
     if (!demoGustDone && !touched && state.t - arrivedAt >= DEMO_GUST_AFTER_S) demoGust();

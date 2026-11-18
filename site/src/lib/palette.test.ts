@@ -1,17 +1,27 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { bannedPairs, contrast, palette, rgb, textPairs, type Role } from './palette';
+import { HILL_TINT, SKY_TINT, bannedPairs, contrast, mix, palette, rgb, textPairs, type Role } from './palette';
 
 const SRC = fileURLToPath(new URL('..', import.meta.url));
 const kebab = (s: string) => s.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 
 test('known ratios', () => {
   expect(contrast('#0A1220', '#FFFFFF')).toBeCloseTo(18.75, 2);
-  expect(contrast('#5C6B80', '#E6F1FC')).toBeCloseTo(4.74, 2);
   expect(contrast('#FF5B14', '#FFFFFF')).toBeCloseTo(3.11, 2);
   expect(contrast('#FF5B14', '#1890FF')).toBeCloseTo(1.04, 2);
   expect(contrast('#FFFFFF', '#0A1220')).toBeCloseTo(18.75, 2);
+});
+
+test('the sky and the far hill are the air colour laid over the ground', () => {
+  expect(mix('#FFFFFF', '#000000', 0.5)).toBe('#808080');
+  expect(palette.sky).toBe(mix(palette.ground, palette.air, SKY_TINT));
+  expect(palette.hillFar).toBe(mix(palette.ground, palette.air, HILL_TINT));
+});
+
+test('the bright orange has room to spare on white, and the two brand colours are equally bright', () => {
+  expect(contrast(palette.signal, palette.ground)).toBeGreaterThanOrEqual(3.5);
+  expect(contrast(palette.signal, palette.air)).toBeLessThan(1.2);
 });
 
 test.each(textPairs)('$fg on $bg meets $min', ({ fg, bg, min }) => {

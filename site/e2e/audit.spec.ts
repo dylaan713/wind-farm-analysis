@@ -1,5 +1,6 @@
 // Tests for defects found by the 2026-11-14 audits. Each one failed, or would have, before its fix.
 import { expect, test, type Page } from '@playwright/test';
+import { decodePng } from './png';
 
 type Hero = {
   state(): { bursts: number; charge: number; demoGustDone: boolean; running: boolean };
@@ -49,20 +50,87 @@ const sweepAcross = async (page: Page, selector: string) => {
   }
 };
 
-test('the orange word keeps its contrast, still and while the wind is pushed across it', async ({ page }) => {
+/**
+ * What the air actually does to the headline word, measured on a real screenshot: the lowest WCAG
+ * contrast between the word's colour and any pixel just outside one of its letters (two device
+ * pixels beyond the letter and its soft edge). The air may run between the letters; it may not
+ * reach them.
+ */
+const lowestContrastBesideLetters = async (page: Page, selector: string, token: string) => {
+  const box = (await page.locator(selector).boundingBox())!, pad = 8;
+  const hex = (await page.evaluate((tok) => getComputedStyle(document.documentElement).getPropertyValue(tok).trim(), token)).replace('#', '');
+  const fg = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16)) as [number, number, number];
+  const { width, height, data } = decodePng(await page.screenshot({ clip: { x: box.x - pad, y: box.y - pad, width: box.width + pad * 2, height: box.height + pad * 2 } }));
+  const lum = (r: number, g: number, b: number) => {
+    const f = (c: number) => { const v = c / 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+    return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+  };
+  const letter = new Uint8Array(width * height);
+  let letterPixels = 0;
+  for (let i = 0; i < width * height; i++) {
+    // A letter pixel, or any trace of a letter's soft edge: more red than blue. The sky and the air never are.
+    if (data[i * 4]! - data[i * 4 + 2]! > 2) { letter[i] = 1; letterPixels++; }
+  }
+  /** Every pixel within one step of a marked one. */
+  const grow = (from: Uint8Array) => {
+    const to = new Uint8Array(from.length);
+    for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+      let near = 0;
+      for (let dy = -1; dy <= 1 && !near; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const xx = x + dx, yy = y + dy;
+        if (xx >= 0 && yy >= 0 && xx < width && yy < height && from[yy * width + xx]) { near = 1; break; }
+      }
+      to[y * width + x] = near;
+    }
+    return to;
+  };
+  const one = grow(letter), two = grow(one), fgLum = lum(...fg);
+  let lowest = 21, beside = 0;
+  for (let i = 0; i < width * height; i++) {
+    if (!two[i] || one[i]) continue;
+    beside++;
+    const bg = lum(data[i * 4]!, data[i * 4 + 1]!, data[i * 4 + 2]!), ratio = (Math.max(fgLum, bg) + 0.05) / (Math.min(fgLum, bg) + 0.05);
+    if (ratio < lowest) lowest = ratio;
+  }
+  return { lowest, letterPixels, beside };
+};
+
+test('the air reaches the orange word but never touches its letters, still and while the wind is pushed across it', async ({ page }) => {
   await open(page);
   await page.waitForTimeout(1200);
-  expect(await lowestContrast(page, 'h1 .energy', '--signal')).toBeGreaterThanOrEqual(3);
-  await sweepAcross(page, 'h1 .energy');
-  expect(await lowestContrast(page, 'h1 .energy', '--signal')).toBeGreaterThanOrEqual(3);
+  const still = await lowestContrastBesideLetters(page, 'h1 .energy', '--signal');
+  expect(still.letterPixels).toBeGreaterThan(1500);   // the word was found in the screenshot
+  expect(still.beside).toBeGreaterThan(300);
+  expect(still.lowest).toBeGreaterThanOrEqual(3);
+  for (let i = 0; i < 3; i++) {
+    await sweepAcross(page, 'h1 .energy');
+    expect((await lowestContrastBesideLetters(page, 'h1 .energy', '--signal')).lowest).toBeGreaterThanOrEqual(3);
+  }
 });
 
-test('the instruction and the readouts keep their contrast while the wind is pushed across them', async ({ page }) => {
+test('air is drawn inside the headline word, between its letters', async ({ page }) => {
+  await open(page);
+  await sweepAcross(page, 'h1 .energy');
+  await page.waitForTimeout(600);
+  // Count air-canvas pixels inside the word's box that are not plain white: with a box-shaped calm zone there were none.
+  const streaked = await page.evaluate(() => {
+    const root = document.querySelector('[data-hero]')!.getBoundingClientRect(), el = document.querySelector('h1 .energy')!.getBoundingClientRect();
+    const air = document.querySelector<HTMLCanvasElement>('canvas[data-layer="air"]')!, k = air.width / root.width;
+    const d = air.getContext('2d')!.getImageData(Math.floor((el.left - root.left) * k), Math.floor((el.top - root.top) * k), Math.ceil(el.width * k), Math.ceil(el.height * k)).data;
+    let n = 0;
+    for (let i = 0; i < d.length; i += 4) if (d[i]! < 250 || d[i + 1]! < 250) n++;
+    return n;
+  });
+  expect(streaked).toBeGreaterThan(50);
+});
+
+test('the instruction and the readouts stay readable with the wind passing behind them', async ({ page }) => {
   await open(page);
   await page.waitForTimeout(1200);
   for (const sel of ['.sub-live', '[data-readouts]']) {
     await sweepAcross(page, sel);
-    expect(await lowestContrast(page, sel, '--third'), sel).toBeGreaterThanOrEqual(4.5);
+    expect(await lowestContrast(page, sel, '--ink'), sel).toBeGreaterThanOrEqual(4.5);
+    expect(await page.locator(sel).evaluate((el) => [...el.querySelectorAll('*'), el].every((n) => getComputedStyle(n).color === 'rgb(10, 18, 32)')), `${sel} is all in the dark text colour`).toBe(true);
   }
 });
 
@@ -169,8 +237,8 @@ test.describe('layouts the audit found broken', () => {
       const c = document.querySelector<HTMLCanvasElement>('canvas[data-layer="hills"]')!, k = c.width / c.getBoundingClientRect().width;
       const x = Math.round(c.width * 0.8), col = c.getContext('2d')!.getImageData(x, 0, 1, c.height).data;
       let y = c.height - 1;
-      // Walk up from the bottom while the pixel is the white of the front hill.
-      while (y > 0 && col[y * 4] === 255 && col[y * 4 + 1] === 255 && col[y * 4 + 2] === 255 && col[y * 4 + 3] === 255) y--;
+      // Walk up from the bottom through the pale ground until the dark ridge line (or the cable on it).
+      while (y > 0 && col[y * 4]! + col[y * 4 + 1]! + col[y * 4 + 2]! > 300) y--;
       return y / k;
     });
     expect(base).toBeLessThan(chips.y - 6);

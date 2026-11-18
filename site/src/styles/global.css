@@ -57,7 +57,7 @@ html.arriving h1 .line { animation: rise-in 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 
 html.arriving h1 .line:nth-child(2) { animation-delay: 0.09s; }
 html.arriving [data-arrive] { animation: rise-in 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s both; }
 html.arriving [data-arrive] ~ [data-arrive], html.arriving nav[data-arrive] { animation-delay: 0.32s; }
-/* The live canvas draws the sunrise itself, so the still drawing (sun already up) stays out of the way.
+/* The live canvas brings the sky in itself, so the still drawing stays out of the way during the arrival.
    If no script ever takes over, the drawing comes back by itself after the arrival would have ended. */
 @keyframes still-back { from { visibility: hidden; } to { visibility: visible; } }
 html.arriving [data-still] { animation: still-back 0s 1.5s both; }

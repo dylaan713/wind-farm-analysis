@@ -15,7 +15,8 @@ export interface Scene {
   h: number;
   /** Lengths tuned on an 800px stage are multiplied by this, so a phone feels like a laptop. */
   s: number;
-  sun: { x: number; y: number; r: number };
+  /** Where the light comes from. Nothing is drawn there; the near turbine's shadow falls away from it. */
+  light: { x: number };
   turbines: TurbinePose[];
 }
 
@@ -48,7 +49,7 @@ export function layout(w: number, h: number, opts: { clearBelow?: number } = {})
     if (opts.clearBelow !== undefined) hubY = Math.min(baseY - radius * 1.15, Math.max(hubY, opts.clearBelow + radius));
     return { baseX, baseY, hubY, radius, scale, front };
   });
-  return { w, h, s: Math.min(w, h) / 800, sun: { x: 0.66 * w, y: 0.69 * h, r: 0.13 * Math.min(w, h) }, turbines };
+  return { w, h, s: Math.min(w, h) / 800, light: { x: 0.66 * w }, turbines };
 }
 
 /** How high the particles may fall before they are recycled: just above the far hill. */

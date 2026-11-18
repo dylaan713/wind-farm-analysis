@@ -5,11 +5,8 @@ test('scale factor', () => {
   expect(layout(390, 780).s).toBeCloseTo(0.4875, 4);
 });
 
-test('sun position and size', () => {
-  const { sun } = layout(1440, 820);
-  expect(sun.x).toBeCloseTo(950.4, 1);
-  expect(sun.y).toBeCloseTo(565.8, 1);
-  expect(sun.r).toBeCloseTo(106.6, 1);
+test('the light comes from two thirds of the way across', () => {
+  expect(layout(1440, 820).light.x).toBeCloseTo(950.4, 1);
 });
 
 test('three turbines, the first on the front hill', () => {
