@@ -1,0 +1,15 @@
+[project]
+name = "wind-farm"
+version = "0.1.0"
+description = "Wind farm energy model, fixture extraction for the finance model"
+requires-python = ">=3.12"
+dependencies = ["numpy", "pandas", "openpyxl", "requests"]
+
+[dependency-groups]
+dev = ["pytest"]
+
+[tool.pytest.ini_options]
+testpaths = ["energy/tests", "finance/tests"]
+
+[tool.uv]
+package = false

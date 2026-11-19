@@ -1,5 +1,17 @@
 import { expect, test, type Page } from '@playwright/test';
 
+/** Temporary diagnostic (2026-11-14): these tests failed on CI's runner without a known cause. Records every pointer and scroll event the page receives, and prints it with the scene's state if the test fails. */
+const recordInput = (page: Page) =>
+  page.addInitScript(() => {
+    const log: unknown[] = ((window as unknown as { __ev: unknown[] }).__ev = []);
+    for (const t of ['pointerdown', 'pointermove', 'pointerup', 'pointerleave', 'pointercancel', 'scroll'])
+      window.addEventListener(t, (e) => { const p = e as PointerEvent; log.push([t, p.pointerType, Math.round(p.clientX), Math.round(p.clientY), e.isTrusted, Math.round(performance.now())]); }, true);
+  });
+const diagnose = async (page: Page, label: string) => {
+  const d = await page.evaluate(() => ({ ev: (window as unknown as { __ev: unknown[] }).__ev, state: (window as unknown as { __hero?: { state(): unknown } }).__hero?.state(), classes: document.documentElement.className, now: Math.round(performance.now()) })).catch((e) => ({ error: String(e) }));
+  console.log(`DIAG ${label}: ${JSON.stringify(d)}`);
+};
+
 const open = async (page: Page) => {
   await page.goto('/?debug');
   await page.waitForFunction(() => document.documentElement.classList.contains('live'));
@@ -98,6 +110,7 @@ test('chips are links that work without the animation', async ({ page }) => {
 
 test('the spoken summary waits for the visitor and is never on a timer', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop', 'mouse sweep');
+  await recordInput(page);
   await open(page);
   // The visual meter is hidden from screen readers; the summary carries the figure instead.
   await expect(page.locator('[data-meter]')).toHaveAttribute('aria-hidden', 'true');
@@ -108,6 +121,7 @@ test('the spoken summary waits for the visitor and is never on a timer', async (
   await page.mouse.move(300, 300);
   await page.waitForTimeout(6000);
   const quiet = await summary.innerText();
+  if (quiet !== '') await diagnose(page, 'summary spoke unprompted');
   expect(quiet).toBe('');
   // After a sweep, and a pause, it speaks once.
   const hub = await nearHub(page);
