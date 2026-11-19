@@ -37,7 +37,7 @@ accessibility 95). Measured 2026-11-14 on `site/polish` after the audit fixes: c
 - Per-frame drawing is kept cheap on purpose (see the layer comment in `scripts/hero.ts`): the
   first version scored 71 on Lighthouse mobile until the hills were made static, the air canvas
   dropped to one pixel per CSS pixel, and the top bar's backdrop blur was removed.
-- `index.astro` carries `noindex` while the repo is private. Remove it at launch.
+- `index.astro` carries `noindex` until launch. Removing it is part of the launch decision.
 - **Text over the scene sits in a calm zone** (`data-calm`): no air is drawn behind it and the sky tint
   is erased there. The orange headline word is only 3.11:1 on pure white, so anything behind it fails
   it. `e2e/audit.spec.ts` samples the canvas behind each piece of text and fails if contrast drops.
@@ -51,8 +51,9 @@ accessibility 95). Measured 2026-11-14 on `site/polish` after the audit fixes: c
   works on a branch, pushes it, opens a pull request and stops there. Never merge a pull request,
   never push or commit to `main`, never force-push, never delete a branch you did not create, and
   never change repo settings. If something is blocked waiting on a merge, say so in the pull
-  request and wait. (Dylan, 2026-11-14. GitHub does not enforce this while the repo is private,
-  so it is on each person and agent to keep it.)
+  request and wait. (Dylan, 2026-11-14. Since 2026-11-19 GitHub enforces part of it: `main` requires a pull
+  request with one approving review, and force-pushes and deletion are blocked. Who merges is
+  still on each person and agent to keep.)
 - Pull requests get a review from the other person before Dylan merges.
 - Only the finance partner edits `finance/model.xlsx`.
 - The repo will be public. Commit with a GitHub noreply email. No secrets; `.env` stays untracked.
@@ -64,4 +65,4 @@ accessibility 95). Measured 2026-11-14 on `site/polish` after the audit fixes: c
 ## Capability
 Six project-scoped skills in `.claude/skills/` (Python, TypeScript, accessibility, Playwright,
 verification). The site's quality bar is Dylan's global `web-design-craft` skill, not copied here.
-The installed set, the deferred set and the rejected set with reasons are in `.claude/CAPABILITY.md`.
+The installed set, the deferred set and the rejected set with reasons are in `.claude/CAPABILITY.md` (a local file, not in the repository).
