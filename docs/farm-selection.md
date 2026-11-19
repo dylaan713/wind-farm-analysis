@@ -53,8 +53,8 @@ out for a lower and more variable record (33 to 40%).
   gives power only. That is extra work, and it is mechanical engineering worth showing.
 
 Why not the others:
-- **Courtenay:** 2025 came in at 24% against 40 to 47% in every other year. Something happened
-  (an outage or curtailment), and 2025 is the year the model would be tested on.
+- **Courtenay:** 2025 came in at 24% against 40 to 47% in every other year. The public data does
+  not say why, and 2025 is the year the model would be tested on.
 - **Blue Cloud I:** the cleanest turbine data (published thrust curve), but seven years not eight,
   and West Texas curtailment is a known risk to the comparison. A good second choice.
 - **Sunflower, New Frontier:** fine records, but each has another farm between 10 and 20 km away.
